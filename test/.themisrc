@@ -1,0 +1,71 @@
+
+call themis#option('recursive', 1)
+
+let s:root = getcwd()
+
+function! TestHelper() abort
+    let helper = {
+        \ 'assert': s:assert(),
+    \ }
+
+    function! helper.before_each() abort
+        execute 'cd' s:root
+
+        filetype on
+        syntax enable
+    endfunction
+
+    function! helper.after_each() abort
+        tabedit
+        tabonly!
+        silent! %bwipeout!
+
+        filetype off
+        syntax off
+    endfunction
+
+    function! helper.suite(name) abort
+        let suite = themis#suite(a:name)
+        let suite.before_each = self.before_each
+        let suite.after_each = self.after_each
+        return suite
+    endfunction
+
+    function! helper.sync_execute(...) abort
+        let job = call('counteria#main', a:000)
+        call job.wait()
+    endfunction
+
+    function! helper.execute(...) abort
+        call call('counteria#main', a:000)
+    endfunction
+
+    function! helper.search(pattern) abort
+        let result = search(a:pattern)
+        if result == 0
+            let message = printf('%s not found', a:pattern)
+            call self.assert.fail(message)
+        endif
+        return result
+    endfunction
+
+    return helper
+endfunction
+
+function! s:assert() abort
+    let assert = themis#helper('assert')
+
+    function! assert.filetype(bufnr, expected) abort
+        let actual = getbufvar(a:bufnr, '&filetype')
+        let message = printf('buffer &filetype should be %s, but actual: %s', a:expected, actual)
+        call self.equals(a:expected, actual, message)
+    endfunction
+
+    function! assert.tab_count(expected) abort
+        let actual = tabpagenr('$')
+        let message = printf('tab count should be %s, but actual: %s', a:expected, actual)
+        call self.equals(actual, a:expected, message)
+    endfunction
+
+    return assert
+endfunction
