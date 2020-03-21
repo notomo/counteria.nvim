@@ -4,3 +4,9 @@ endif
 let g:loaded_counteria = 1
 
 command! -nargs=* Counteria call counteria#main(<f-args>)
+
+augroup counteria
+    autocmd!
+    autocmd BufReadCmd counteria://* call counteria#read(expand('<abuf>'))
+    autocmd BufWriteCmd counteria://* call counteria#write(expand('<abuf>'))
+augroup END

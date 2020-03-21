@@ -7,8 +7,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/neovim/go-client/nvim"
 
+	"github.com/notomo/counteria.nvim/cmd/counteriad/internal"
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/datastore/sqliteimpl"
+	"github.com/notomo/counteria.nvim/src/router"
 	"github.com/notomo/counteria.nvim/src/view"
 )
 
@@ -43,17 +45,23 @@ func run() error {
 		return err
 	}
 
-	cmd := command.New(
-		vim,
-		&view.Renderer{Vim: vim},
-		dep,
+	handler := internal.NewHandler(
+		&router.Router{
+			Vim: vim,
+			Root: &command.RootCommand{
+				Renderer: &view.Renderer{Vim: vim},
+				Dep:      dep,
+			},
+		},
 	)
 
-	vim.RegisterHandler("do", cmd.Do)
+	vim.RegisterHandler("do", handler.Do)
+	vim.RegisterHandler("read", handler.Read)
+	vim.RegisterHandler("write", handler.Write)
 
 	// for testing
-	vim.RegisterHandler("wait", cmd.Wait)
-	vim.RegisterHandler("startWaiting", cmd.StartWaiting)
+	vim.RegisterHandler("startWaiting", handler.StartWaiting)
+	vim.RegisterHandler("wait", handler.Wait)
 
 	return vim.Serve()
 }
