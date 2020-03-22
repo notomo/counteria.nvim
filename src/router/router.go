@@ -33,7 +33,7 @@ func (router *Router) Do(args []string) error {
 	case "task/create":
 		route = TaskNew
 	default:
-		return errors.Errorf("invalid args: %s", args)
+		return &routeErr{errInvalidRoute, strings.Join(args, " ")}
 	}
 
 	batch := router.Vim.NewBatch()
@@ -57,7 +57,7 @@ func (router *Router) Read(buf nvim.Buffer) error {
 		return router.Root.TaskCmd(buf).CreateForm()
 	}
 
-	return errors.Errorf("invalid buffer name: %s", name)
+	return &routeErr{errInvalidReadPath, name}
 }
 
 // Write : from buffer to datastore
@@ -72,11 +72,16 @@ func (router *Router) Write(buf nvim.Buffer) error {
 		return router.Root.TaskCmd(buf).Create()
 	}
 
-	return errors.Errorf("invalid buffer name: %s", name)
+	return &routeErr{errInvalidWritePath, name}
 }
 
 // Error :
 func (router *Router) Error(err error) error {
+	if _, ok := err.(*routeErr); ok {
+		msg := fmt.Sprintf("[counteria] %s\n", err)
+		return router.Vim.WriteErr(msg)
+	}
+
 	trace := fmt.Sprintf("%+v", err)
 	lines := strings.Split(trace, "\n")
 	msgs := []string{}
