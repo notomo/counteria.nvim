@@ -36,3 +36,10 @@ function! counteria#write(bufnr) abort
 
     return s:job
 endfunction
+
+function! counteria#last_job() abort
+    if exists('s:job')
+        return s:job
+    endif
+    return v:null
+endfunction

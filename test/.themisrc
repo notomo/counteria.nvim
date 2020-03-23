@@ -36,8 +36,10 @@ function! TestHelper() abort
         call job.wait()
     endfunction
 
-    function! helper.execute(...) abort
-        call call('counteria#main', a:000)
+    function! helper.sync_write() abort
+        write
+        let job = counteria#last_job()
+        call job.wait()
     endfunction
 
     function! helper.search(pattern) abort
@@ -47,6 +49,14 @@ function! TestHelper() abort
             call self.assert.fail(message)
         endif
         return result
+    endfunction
+
+    function! helper.buffer_log() abort
+        call themis#log('')
+        let lines = getbufline('%', 1, '$')
+        for line in lines
+            call themis#log('[buffer] ' . line)
+        endfor
     endfunction
 
     return helper
@@ -65,6 +75,13 @@ function! s:assert() abort
         let actual = tabpagenr('$')
         let message = printf('tab count should be %s, but actual: %s', a:expected, actual)
         call self.equals(actual, a:expected, message)
+    endfunction
+
+    function! assert.match_path(expected) abort
+        let expected = '\v' . a:expected
+        let actual = expand('%:p')
+        let message = printf('file path should match %s, but actual: %s', a:expected, actual)
+        call self.match(actual, expected, message)
     endfunction
 
     return assert

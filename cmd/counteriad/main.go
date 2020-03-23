@@ -46,13 +46,13 @@ func run() error {
 	}
 
 	handler := internal.NewHandler(
-		&router.Router{
-			Vim: vim,
-			Root: &command.RootCommand{
+		router.New(
+			vim,
+			&command.RootCommand{
 				Renderer: &view.Renderer{Vim: vim},
 				Dep:      dep,
 			},
-		},
+		),
 	)
 
 	vim.RegisterHandler("do", handler.Do)

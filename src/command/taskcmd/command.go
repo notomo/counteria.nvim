@@ -1,8 +1,11 @@
 package taskcmd
 
 import (
+	"strconv"
+
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/domain/repository"
+	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
 	"github.com/pkg/errors"
 )
@@ -25,8 +28,30 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	task := model.Task{}
-	return cmd.Renderer.OneNewTask(task)
+	var task model.Task
+	if err := cmd.Renderer.Decode(&task); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cmd.TaskRepository.Create(&task); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return cmd.Renderer.SaveAndRedirect(route.TasksOne, route.Params{"taskId": strconv.Itoa(task.ID)})
+}
+
+// ShowOne :
+func (cmd *Command) ShowOne(taskID string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	task, err := cmd.TaskRepository.One(id)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return cmd.Renderer.OneTask(*task)
 }
 
 // CreateForm :

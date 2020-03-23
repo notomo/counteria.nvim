@@ -7,37 +7,48 @@ import (
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/command"
+	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/pkg/errors"
-)
-
-// Route :
-type Route string
-
-const schema = "counteria://"
-
-var (
-	// TaskNew :
-	TaskNew = Route(schema + "task/new")
 )
 
 // Router :
 type Router struct {
-	Vim  *nvim.Nvim
-	Root *command.RootCommand
+	Vim         *nvim.Nvim
+	Root        *command.RootCommand
+	doRoutes    route.Routes
+	readRoutes  route.Routes
+	writeRoutes route.Routes
+}
+
+// New :
+func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
+	return &Router{
+		Vim:  vim,
+		Root: root,
+		doRoutes: route.Routes{
+			route.TasksNew,
+			route.TasksOne,
+		},
+		readRoutes: route.Routes{
+			route.TasksNew,
+			route.TasksOne,
+		},
+		writeRoutes: route.Routes{
+			route.TasksNew,
+		},
+	}
 }
 
 // Do : `:Counteria {args}`
 func (router *Router) Do(args []string) error {
-	var route Route
-	switch strings.Join(args, "/") {
-	case "task/create":
-		route = TaskNew
-	default:
-		return &routeErr{errInvalidRoute, strings.Join(args, " ")}
+	path := route.Schema + strings.Join(args, "")
+	_, _, err := router.doRoutes.Match(path)
+	if err != nil {
+		return &routeErr{errInvalidRoute, err.Error()}
 	}
 
 	batch := router.Vim.NewBatch()
-	batch.Command(fmt.Sprintf("tabedit %s", route))
+	batch.Command(fmt.Sprintf("tabedit %s", path))
 	if err := batch.Execute(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -47,32 +58,44 @@ func (router *Router) Do(args []string) error {
 
 // Read : from datastore to buffer
 func (router *Router) Read(buf nvim.Buffer) error {
-	name, err := router.Vim.BufferName(buf)
+	path, err := router.Vim.BufferName(buf)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	switch Route(name) {
-	case TaskNew:
-		return router.Root.TaskCmd(buf).CreateForm()
+	r, params, err := router.readRoutes.Match(path)
+	if err != nil {
+		return &routeErr{errInvalidReadPath, err.Error()}
 	}
 
-	return &routeErr{errInvalidReadPath, name}
+	switch r {
+	case route.TasksNew:
+		return router.Root.TaskCmd(buf).CreateForm()
+	case route.TasksOne:
+		return router.Root.TaskCmd(buf).ShowOne(params["taskId"])
+	}
+
+	return &routeErr{errInvalidReadPath, path}
 }
 
 // Write : from buffer to datastore
 func (router *Router) Write(buf nvim.Buffer) error {
-	name, err := router.Vim.BufferName(buf)
+	path, err := router.Vim.BufferName(buf)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	switch Route(name) {
-	case TaskNew:
+	r, _, err := router.readRoutes.Match(path)
+	if err != nil {
+		return &routeErr{errInvalidWritePath, err.Error()}
+	}
+
+	switch r {
+	case route.TasksNew:
 		return router.Root.TaskCmd(buf).Create()
 	}
 
-	return &routeErr{errInvalidWritePath, name}
+	return &routeErr{errInvalidWritePath, path}
 }
 
 // Error :
