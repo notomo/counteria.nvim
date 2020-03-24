@@ -13,7 +13,12 @@ type TaskRepository struct {
 
 // List :
 func (repo *TaskRepository) List() ([]model.Task, error) {
-	return nil, nil
+	var tasks []model.Task
+	_, err := repo.Db.Select(&tasks, "SELECT * FROM tasks")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return tasks, nil
 }
 
 // Create :

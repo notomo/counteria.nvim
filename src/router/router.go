@@ -15,7 +15,6 @@ import (
 type Router struct {
 	Vim         *nvim.Nvim
 	Root        *command.RootCommand
-	doRoutes    route.Routes
 	readRoutes  route.Routes
 	writeRoutes route.Routes
 }
@@ -25,13 +24,10 @@ func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 	return &Router{
 		Vim:  vim,
 		Root: root,
-		doRoutes: route.Routes{
-			route.TasksNew,
-			route.TasksOne,
-		},
 		readRoutes: route.Routes{
 			route.TasksNew,
 			route.TasksOne,
+			route.TasksList,
 		},
 		writeRoutes: route.Routes{
 			route.TasksNew,
@@ -42,13 +38,14 @@ func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 // Do : `:Counteria {args}`
 func (router *Router) Do(args []string) error {
 	path := route.Schema + strings.Join(args, "")
-	_, _, err := router.doRoutes.Match(path)
+	_, _, err := router.readRoutes.Match(path)
 	if err != nil {
 		return &routeErr{errInvalidRoute, err.Error()}
 	}
 
 	batch := router.Vim.NewBatch()
-	batch.Command(fmt.Sprintf("tabedit %s", path))
+	batch.Command(fmt.Sprintf("tab drop %s", path))
+	batch.Command("edit!")
 	if err := batch.Execute(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -73,6 +70,8 @@ func (router *Router) Read(buf nvim.Buffer) error {
 		return router.Root.TaskCmd(buf).CreateForm()
 	case route.TasksOne:
 		return router.Root.TaskCmd(buf).ShowOne(params["taskId"])
+	case route.TasksList:
+		return router.Root.TaskCmd(buf).List()
 	}
 
 	return &routeErr{errInvalidReadPath, path}

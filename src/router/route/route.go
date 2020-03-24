@@ -71,6 +71,8 @@ var (
 	TasksNew = newRoute(Schema + "tasks/new")
 	// TasksOne :
 	TasksOne = newRoute(Schema + "tasks/:taskId")
+	// TasksList :
+	TasksList = newRoute(Schema + "tasks")
 )
 
 // Params :
