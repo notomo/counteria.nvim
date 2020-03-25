@@ -43,10 +43,35 @@ func (router *Router) Do(args []string) error {
 		return &routeErr{errInvalidRoute, err.Error()}
 	}
 
+	// NOTE: avoid executing BufReadCmd
+
+	var bufnr int
+	if err := router.Vim.Call("bufnr", &bufnr, path); err != nil {
+		return errors.WithStack(err)
+	}
+
+	var buf nvim.Buffer
+	exists := bufnr != -1
+	if !exists {
+		b, err := router.Vim.CreateBuffer(false, true)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		buf = b
+		if err := router.Vim.SetBufferName(buf, path); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		buf = nvim.Buffer(bufnr)
+	}
+
 	batch := router.Vim.NewBatch()
 	batch.Command(fmt.Sprintf("tab drop %s", path))
-	batch.Command("edit!")
 	if err := batch.Execute(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := router.Read(buf); err != nil {
 		return errors.WithStack(err)
 	}
 

@@ -36,6 +36,12 @@ function! TestHelper() abort
         call job.wait()
     endfunction
 
+    function! helper.sync_read(path) abort
+        execute 'edit' a:path
+        let job = counteria#last_job()
+        call job.wait()
+    endfunction
+
     function! helper.sync_write() abort
         write
         let job = counteria#last_job()
@@ -57,6 +63,10 @@ function! TestHelper() abort
         for line in lines
             call themis#log('[buffer] ' . line)
         endfor
+    endfunction
+
+    function! helper.message_log() abort
+        call themis#log(execute('messages'))
     endfunction
 
     return helper
