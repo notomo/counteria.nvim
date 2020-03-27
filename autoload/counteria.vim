@@ -10,29 +10,30 @@ function! counteria#main(...) abort
 
     call s:job.start(s:executable)
 
-    call s:job.notify('do', a:000)
+    let sync = v:false
+    call s:job.call(sync, 'do', a:000)
 
     return s:job
 endfunction
 
-function! counteria#read(bufnr) abort
+function! counteria#read(sync, bufnr) abort
     if !exists('s:job')
         let s:job = counteria#job#new()
     endif
     call s:job.start(s:executable)
 
-    call s:job.notify('read', a:bufnr)
+    call s:job.call(a:sync, 'read', a:bufnr)
 
     return s:job
 endfunction
 
-function! counteria#write(bufnr) abort
+function! counteria#write(sync, bufnr) abort
     if !exists('s:job')
         let s:job = counteria#job#new()
     endif
     call s:job.start(s:executable)
 
-    call s:job.notify('write', a:bufnr)
+    call s:job.call(a:sync, 'write', a:bufnr)
 
     return s:job
 endfunction

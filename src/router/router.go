@@ -15,6 +15,7 @@ import (
 type Router struct {
 	Vim         *nvim.Nvim
 	Root        *command.RootCommand
+	Redirector  *route.Redirector
 	readRoutes  route.Routes
 	writeRoutes route.Routes
 }
@@ -22,8 +23,9 @@ type Router struct {
 // New :
 func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 	return &Router{
-		Vim:  vim,
-		Root: root,
+		Vim:        vim,
+		Root:       root,
+		Redirector: root.Renderer.Redirector,
 		readRoutes: route.Routes{
 			route.TasksNew,
 			route.TasksOne,
@@ -37,41 +39,21 @@ func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 
 // Do : `:Counteria {args}`
 func (router *Router) Do(args []string) error {
-	path := route.Schema + strings.Join(args, "")
-	_, _, err := router.readRoutes.Match(path)
-	if err != nil {
-		return &routeErr{errInvalidRoute, err.Error()}
+	if len(args) == 0 {
+		return router.open(args)
 	}
 
-	// NOTE: avoid executing BufReadCmd
-
-	var bufnr int
-	if err := router.Vim.Call("bufnr", &bufnr, path); err != nil {
-		return errors.WithStack(err)
+	var subRoute func(args []string) error
+	switch name := args[0]; name {
+	case "open":
+		subRoute = router.open
+	case "do":
+		subRoute = router.do
+	default:
+		return &routeErr{errInvalidRoute, name}
 	}
 
-	var buf nvim.Buffer
-	exists := bufnr != -1
-	if !exists {
-		b, err := router.Vim.CreateBuffer(false, true)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		buf = b
-		if err := router.Vim.SetBufferName(buf, path); err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
-		buf = nvim.Buffer(bufnr)
-	}
-
-	batch := router.Vim.NewBatch()
-	batch.Command(fmt.Sprintf("tab drop %s", path))
-	if err := batch.Execute(); err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err := router.Read(buf); err != nil {
+	if err := subRoute(args[1:]); err != nil {
 		return errors.WithStack(err)
 	}
 

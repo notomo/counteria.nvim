@@ -7,6 +7,6 @@ command! -nargs=* Counteria call counteria#main(<f-args>)
 
 augroup counteria
     autocmd!
-    autocmd BufReadCmd counteria://* call counteria#read(expand('<abuf>'))
-    autocmd BufWriteCmd counteria://* call counteria#write(expand('<abuf>'))
+    autocmd BufReadCmd counteria://* call counteria#read(v:false, expand('<abuf>'))
+    autocmd BufWriteCmd counteria://* call counteria#write(v:false, expand('<abuf>'))
 augroup END

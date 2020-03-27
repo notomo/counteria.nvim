@@ -12,6 +12,7 @@ import (
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/datastore/sqliteimpl"
 	"github.com/notomo/counteria.nvim/src/router"
+	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
 )
 
@@ -50,8 +51,11 @@ func run() error {
 		router.New(
 			vim,
 			&command.RootCommand{
-				Renderer: &view.Renderer{Vim: vim},
-				Dep:      dep,
+				Renderer: &view.Renderer{
+					Vim:        vim,
+					Redirector: &route.Redirector{Vim: vim},
+				},
+				Dep: dep,
 			},
 		),
 	)
@@ -64,5 +68,8 @@ func run() error {
 	vim.RegisterHandler("startWaiting", handler.StartWaiting)
 	vim.RegisterHandler("wait", handler.Wait)
 
-	return vim.Serve()
+	if err := vim.Serve(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }

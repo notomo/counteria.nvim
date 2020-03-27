@@ -1,6 +1,8 @@
 package view
 
 import (
+	"strconv"
+
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/pkg/errors"
 )
@@ -13,15 +15,32 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 	}
 
 	buf := renderer.Buffer
-
 	batch := renderer.Vim.NewBatch()
+	batch.ClearBufferNamespace(buf, renderer.NsID, 0, -1)
 	batch.SetBufferOption(buf, "modifiable", true)
 	batch.SetBufferLines(buf, 0, -1, false, lines)
+
+	noneOpts := map[string]interface{}{}
+	markIDs := make([]int, len(tasks))
+	for i := range tasks {
+		batch.SetBufferExtmark(buf, renderer.NsID, 0, i, 0, noneOpts, &markIDs[i])
+	}
+
 	batch.SetBufferOption(buf, "modifiable", false)
 	batch.SetBufferOption(buf, "buftype", "nofile")
 	batch.SetBufferOption(buf, "modified", false)
-
+	batch.SetBufferOption(buf, "filetype", "counteria-tasks")
 	if err := batch.Execute(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	marks := map[string]int{}
+	for i, task := range tasks {
+		id := strconv.Itoa(markIDs[i])
+		marks[id] = task.ID
+	}
+	err := renderer.Vim.SetBufferVar(buf, "_counteria_state", marks)
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
