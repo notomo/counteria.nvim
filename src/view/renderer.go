@@ -23,10 +23,11 @@ type Renderer struct {
 
 // BufferRenderer : for vim buffer
 type BufferRenderer struct {
-	Vim        *nvim.Nvim
-	Buffer     nvim.Buffer
-	NsID       int
-	Redirector *route.Redirector
+	Vim          *nvim.Nvim
+	Buffer       nvim.Buffer
+	BufferClient *vimlib.BufferClient
+	NsID         int
+	Redirector   *route.Redirector
 }
 
 // Buffer :
@@ -40,10 +41,11 @@ func (renderer *Renderer) Buffer(buf nvim.Buffer) *BufferRenderer {
 	})
 
 	return &BufferRenderer{
-		Vim:        renderer.Vim,
-		Buffer:     buf,
-		NsID:       renderer.NsID,
-		Redirector: renderer.Redirector,
+		Vim:          renderer.Vim,
+		Buffer:       buf,
+		BufferClient: renderer.BufferClient,
+		NsID:         renderer.NsID,
+		Redirector:   renderer.Redirector,
 	}
 }
 

@@ -21,6 +21,19 @@ type LineState struct {
 	Path string
 }
 
+// LineStates :
+type LineStates map[string]LineState
+
+const stateKeyName = "_counteria_state"
+
+// SaveLineState :
+func (client *BufferClient) SaveLineState(buf nvim.Buffer, states LineStates) error {
+	if err := client.Vim.SetBufferVar(buf, stateKeyName, states); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // LoadLineState :
 func (client *BufferClient) LoadLineState() (*LineState, error) {
 	client.getNamespace.Do(func() {
@@ -31,8 +44,8 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 		client.NsID = ns
 	})
 
-	bufState := map[string]LineState{}
-	if err := client.Vim.BufferVar(0, "_counteria_state", bufState); err != nil {
+	states := LineStates{}
+	if err := client.Vim.BufferVar(0, stateKeyName, states); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -55,7 +68,7 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 	}
 	id := marks[0].ExtmarkID
 
-	state, ok := bufState[strconv.Itoa(id)]
+	state, ok := states[strconv.Itoa(id)]
 	if !ok {
 		return nil, nil
 	}

@@ -36,7 +36,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		return errors.WithStack(err)
 	}
 
-	bufState := map[string]vimlib.LineState{}
+	states := vimlib.LineStates{}
 	for i, task := range tasks {
 		id := strconv.Itoa(markIDs[i])
 
@@ -48,10 +48,9 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		}
 
 		state := vimlib.LineState{Path: path}
-		bufState[id] = state
+		states[id] = state
 	}
-	err := renderer.Vim.SetBufferVar(buf, "_counteria_state", bufState)
-	if err != nil {
+	if err := renderer.BufferClient.SaveLineState(buf, states); err != nil {
 		return errors.WithStack(err)
 	}
 
