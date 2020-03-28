@@ -8,24 +8,27 @@ import (
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 // Router :
 type Router struct {
-	Vim         *nvim.Nvim
-	Root        *command.RootCommand
-	Redirector  *route.Redirector
-	readRoutes  route.Routes
-	writeRoutes route.Routes
+	Vim          *nvim.Nvim
+	Root         *command.RootCommand
+	BufferClient *vimlib.BufferClient
+	Redirector   *route.Redirector
+	readRoutes   route.Routes
+	writeRoutes  route.Routes
 }
 
 // New :
 func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 	return &Router{
-		Vim:        vim,
-		Root:       root,
-		Redirector: root.Renderer.Redirector,
+		Vim:          vim,
+		Root:         root,
+		BufferClient: root.Renderer.BufferClient,
+		Redirector:   root.Renderer.Redirector,
 		readRoutes: route.Routes{
 			route.TasksNew,
 			route.TasksOne,

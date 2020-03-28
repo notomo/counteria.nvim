@@ -14,6 +14,7 @@ import (
 	"github.com/notomo/counteria.nvim/src/router"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 )
 
 func main() {
@@ -52,8 +53,9 @@ func run() error {
 			vim,
 			&command.RootCommand{
 				Renderer: &view.Renderer{
-					Vim:        vim,
-					Redirector: &route.Redirector{Vim: vim},
+					Vim:          vim,
+					BufferClient: &vimlib.BufferClient{Vim: vim},
+					Redirector:   &route.Redirector{Vim: vim},
 				},
 				Dep: dep,
 			},

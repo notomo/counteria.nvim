@@ -4,6 +4,8 @@ import (
 	"strconv"
 
 	"github.com/notomo/counteria.nvim/src/domain/model"
+	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
@@ -34,12 +36,21 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		return errors.WithStack(err)
 	}
 
-	marks := map[string]int{}
+	bufState := map[string]vimlib.LineState{}
 	for i, task := range tasks {
 		id := strconv.Itoa(markIDs[i])
-		marks[id] = task.ID
+
+		r := route.TasksOne
+		params := route.Params{"taskId": strconv.Itoa(task.ID)}
+		path, err := r.BuildPath(params)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		state := vimlib.LineState{Path: path}
+		bufState[id] = state
 	}
-	err := renderer.Vim.SetBufferVar(buf, "_counteria_state", marks)
+	err := renderer.Vim.SetBufferVar(buf, "_counteria_state", bufState)
 	if err != nil {
 		return errors.WithStack(err)
 	}

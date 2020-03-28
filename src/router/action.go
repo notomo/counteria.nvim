@@ -8,6 +8,20 @@ import (
 )
 
 func (router *Router) do(args []string) error {
+	state, err := router.BufferClient.LoadLineState()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	r, params, err := router.readRoutes.Match(state.Path)
+	if err != nil {
+		return &routeErr{errInvalidRoute, err.Error()}
+	}
+
+	if err := router.Redirector.Do(r, params); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
 

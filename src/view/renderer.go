@@ -7,13 +7,15 @@ import (
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 // Renderer :
 type Renderer struct {
-	Vim        *nvim.Nvim
-	Redirector *route.Redirector
+	Vim          *nvim.Nvim
+	BufferClient *vimlib.BufferClient
+	Redirector   *route.Redirector
 
 	NsID         int
 	getNamespace sync.Once

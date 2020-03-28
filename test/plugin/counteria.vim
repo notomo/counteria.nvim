@@ -14,6 +14,7 @@ function! s:suite.tasks()
     call s:assert.match_path('counteria://tasks')
 
     call s:helper.sync_execute('do')
+    call s:assert.match_path('counteria://tasks/\d+')
 endfunction
 
 function! s:suite.open_tasks_new()
