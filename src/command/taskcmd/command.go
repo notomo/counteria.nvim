@@ -13,6 +13,7 @@ import (
 // Command :
 type Command struct {
 	Renderer       *view.BufferRenderer
+	Redirector     *route.Redirector
 	TaskRepository repository.TaskRepository
 }
 
@@ -37,7 +38,11 @@ func (cmd *Command) Create() error {
 		return errors.WithStack(err)
 	}
 
-	return cmd.Renderer.SaveAndRedirect(route.TasksOne, route.Params{"taskId": strconv.Itoa(task.ID)})
+	if err := cmd.Renderer.Save(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return cmd.Redirector.ToTasksOne(task.ID)
 }
 
 // ShowOne :

@@ -2,6 +2,7 @@ package route
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/pkg/errors"
@@ -51,4 +52,9 @@ func (re *Redirector) Do(r Route, params Params) error {
 	}
 
 	return nil
+}
+
+// ToTasksOne :
+func (re *Redirector) ToTasksOne(taskID int) error {
+	return re.Do(TasksOne, Params{"taskId": strconv.Itoa(taskID)})
 }
