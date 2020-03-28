@@ -3,6 +3,7 @@ package route
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -77,6 +78,15 @@ var (
 
 // Params :
 type Params map[string]string
+
+// TaskID :
+func (params Params) TaskID() int {
+	id, err := strconv.Atoi(params["taskId"])
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
 
 // Routes :
 type Routes []Route

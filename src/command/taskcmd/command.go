@@ -1,8 +1,6 @@
 package taskcmd
 
 import (
-	"strconv"
-
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/domain/repository"
 	"github.com/notomo/counteria.nvim/src/router/route"
@@ -46,13 +44,8 @@ func (cmd *Command) Create() error {
 }
 
 // ShowOne :
-func (cmd *Command) ShowOne(taskID string) error {
-	id, err := strconv.Atoi(taskID)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	task, err := cmd.TaskRepository.One(id)
+func (cmd *Command) ShowOne(taskID int) error {
+	task, err := cmd.TaskRepository.One(taskID)
 	if err != nil {
 		return errors.WithStack(err)
 	}

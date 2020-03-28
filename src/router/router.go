@@ -79,7 +79,7 @@ func (router *Router) Read(buf nvim.Buffer) error {
 	case route.TasksNew:
 		return router.Root.TaskCmd(buf).CreateForm()
 	case route.TasksOne:
-		return router.Root.TaskCmd(buf).ShowOne(params["taskId"])
+		return router.Root.TaskCmd(buf).ShowOne(params.TaskID())
 	case route.TasksList:
 		return router.Root.TaskCmd(buf).List()
 	}
