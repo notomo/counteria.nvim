@@ -53,7 +53,7 @@ func (router *Router) Do(args []string) error {
 	case "do":
 		subRoute = router.do
 	default:
-		return &routeErr{errInvalidRoute, name}
+		return newErr(errInvalidRoute, name)
 	}
 
 	if err := subRoute(args[1:]); err != nil {
@@ -72,7 +72,7 @@ func (router *Router) Read(buf nvim.Buffer) error {
 
 	r, params, err := router.readRoutes.Match(path)
 	if err != nil {
-		return &routeErr{errInvalidReadPath, err.Error()}
+		return newErr(errInvalidReadPath, err.Error())
 	}
 
 	switch r {
@@ -84,7 +84,7 @@ func (router *Router) Read(buf nvim.Buffer) error {
 		return router.Root.TaskCmd(buf).List()
 	}
 
-	return &routeErr{errInvalidReadPath, path}
+	return newErr(errInvalidReadPath, path)
 }
 
 // Write : from buffer to datastore
@@ -96,7 +96,7 @@ func (router *Router) Write(buf nvim.Buffer) error {
 
 	r, _, err := router.readRoutes.Match(path)
 	if err != nil {
-		return &routeErr{errInvalidWritePath, err.Error()}
+		return newErr(errInvalidWritePath, err.Error())
 	}
 
 	switch r {
@@ -104,7 +104,7 @@ func (router *Router) Write(buf nvim.Buffer) error {
 		return router.Root.TaskCmd(buf).Create()
 	}
 
-	return &routeErr{errInvalidWritePath, path}
+	return newErr(errInvalidWritePath, path)
 }
 
 // Error :

@@ -15,7 +15,7 @@ func (router *Router) do(args []string) error {
 
 	r, params, err := router.readRoutes.Match(state.Path)
 	if err != nil {
-		return &routeErr{errInvalidRoute, err.Error()}
+		return newErr(errInvalidRoute, err.Error())
 	}
 
 	if err := router.Redirector.Do(r, params); err != nil {
@@ -29,7 +29,7 @@ func (router *Router) open(args []string) error {
 	path := route.Schema + strings.Join(args, "")
 	r, params, err := router.readRoutes.Match(path)
 	if err != nil {
-		return &routeErr{errInvalidRoute, err.Error()}
+		return newErr(errInvalidRoute, err.Error())
 	}
 
 	if err := router.Redirector.Do(r, params); err != nil {
