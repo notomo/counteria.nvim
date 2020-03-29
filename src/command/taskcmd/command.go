@@ -1,7 +1,6 @@
 package taskcmd
 
 import (
-	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/domain/repository"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
@@ -27,12 +26,17 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	var task model.Task
-	if err := cmd.Renderer.Decode(&task); err != nil {
+	reader, err := cmd.Renderer.BufferClient.Reader(cmd.Renderer.Buffer)
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err := cmd.TaskRepository.Create(&task); err != nil {
+	task, err := cmd.TaskRepository.From(reader)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cmd.TaskRepository.Create(task); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -40,7 +44,7 @@ func (cmd *Command) Create() error {
 		return errors.WithStack(err)
 	}
 
-	return cmd.Redirector.ToTasksOne(task.ID)
+	return cmd.Redirector.ToTasksOne(task.ID())
 }
 
 // ShowOne :
@@ -49,11 +53,11 @@ func (cmd *Command) ShowOne(taskID int) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return cmd.Renderer.OneTask(*task)
+	return cmd.Renderer.OneTask(task)
 }
 
 // CreateForm :
 func (cmd *Command) CreateForm() error {
-	task := model.Task{}
+	task := cmd.TaskRepository.Temporary()
 	return cmd.Renderer.OneNewTask(task)
 }

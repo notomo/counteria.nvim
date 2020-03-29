@@ -51,9 +51,12 @@ function! counteria#job#new() abort
 endfunction
 
 function! s:on_stderr(id, data, event) dict
-    let msg = join(a:data, "\n")
-    if empty(msg)
+    let msgs = join(a:data, "\n")
+    if empty(msgs)
         return
     endif
-    echomsg 'stderr: ' . msg
+    let msgs = substitute(msgs, "\t", '  ', 'g')
+    for msg in split(msgs, "\n")
+        echomsg '[counteria] ' . msg
+    endfor
 endfunction

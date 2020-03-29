@@ -13,7 +13,7 @@ import (
 func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 	lines := [][]byte{}
 	for _, task := range tasks {
-		lines = append(lines, []byte(task.Name))
+		lines = append(lines, []byte(task.Name()))
 	}
 
 	buf := renderer.Buffer
@@ -41,7 +41,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		id := strconv.Itoa(markIDs[i])
 
 		r := route.TasksOne
-		params := route.Params{"taskId": strconv.Itoa(task.ID)}
+		params := route.Params{"taskId": strconv.Itoa(task.ID())}
 		path, err := r.BuildPath(params)
 		if err != nil {
 			return errors.WithStack(err)

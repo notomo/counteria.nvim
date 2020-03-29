@@ -1,8 +1,6 @@
 package view
 
 import (
-	"bytes"
-	"encoding/json"
 	"sync"
 
 	"github.com/neovim/go-client/nvim"
@@ -47,22 +45,6 @@ func (renderer *Renderer) Buffer(buf nvim.Buffer) *BufferRenderer {
 		NsID:         renderer.NsID,
 		Redirector:   renderer.Redirector,
 	}
-}
-
-// Decode :
-func (renderer *BufferRenderer) Decode(result interface{}) error {
-	b, err := renderer.Vim.BufferLines(renderer.Buffer, 0, -1, false)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	reader := bytes.NewReader(bytes.Join(b, nil))
-	decoder := json.NewDecoder(reader)
-	if err := decoder.Decode(result); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
 }
 
 // Save :

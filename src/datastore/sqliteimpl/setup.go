@@ -8,7 +8,6 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/go-gorp/gorp"
 	"github.com/notomo/counteria.nvim/src/domain"
-	"github.com/notomo/counteria.nvim/src/domain/model"
 )
 
 // Setup : tables, dependencies
@@ -26,7 +25,7 @@ func Setup() (*domain.Dep, error) {
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	dbmap.AddTableWithName(model.Task{}, "tasks").SetKeys(true, "ID")
+	dbmap.AddTableWithName(Task{}, "tasks").SetKeys(true, "id")
 
 	if err := dbmap.CreateTablesIfNotExists(); err != nil {
 		return nil, err

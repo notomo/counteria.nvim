@@ -1,7 +1,7 @@
 package model
 
 // Task :
-type Task struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+type Task interface {
+	ID() int
+	Name() string
 }

@@ -1,6 +1,8 @@
 package vimlib
 
 import (
+	"bytes"
+	"io"
 	"strconv"
 	"sync"
 
@@ -74,4 +76,13 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 	}
 
 	return &state, nil
+}
+
+// Reader :
+func (client *BufferClient) Reader(buf nvim.Buffer) (io.Reader, error) {
+	b, err := client.Vim.BufferLines(buf, 0, -1, false)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return bytes.NewReader(bytes.Join(b, nil)), nil
 }
