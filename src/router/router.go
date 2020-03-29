@@ -14,19 +14,19 @@ import (
 
 // Router :
 type Router struct {
-	Vim          *nvim.Nvim
-	Root         *command.RootCommand
-	BufferClient *vimlib.BufferClient
-	Redirector   *route.Redirector
+	Vim                 *nvim.Nvim
+	Root                *command.RootCommand
+	BufferClientFactory *vimlib.BufferClientFactory
+	Redirector          *route.Redirector
 }
 
 // New :
 func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 	return &Router{
-		Vim:          vim,
-		Root:         root,
-		BufferClient: root.Renderer.BufferClient,
-		Redirector:   root.Renderer.Redirector,
+		Vim:                 vim,
+		Root:                root,
+		BufferClientFactory: root.BufferClientFactory,
+		Redirector:          root.Redirector,
 	}
 }
 
@@ -54,8 +54,8 @@ func (router *Router) Do(args []string) error {
 }
 
 // Read : from datastore to buffer
-func (router *Router) Read(buf nvim.Buffer) error {
-	path, err := router.Vim.BufferName(buf)
+func (router *Router) Read(bufnr nvim.Buffer) error {
+	path, err := router.Vim.BufferName(bufnr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -67,19 +67,19 @@ func (router *Router) Read(buf nvim.Buffer) error {
 
 	switch r {
 	case route.TasksNew:
-		return router.Root.TaskCmd(buf).CreateForm()
+		return router.Root.TaskCmd(bufnr).CreateForm()
 	case route.TasksOne:
-		return router.Root.TaskCmd(buf).ShowOne(params.TaskID())
+		return router.Root.TaskCmd(bufnr).ShowOne(params.TaskID())
 	case route.TasksList:
-		return router.Root.TaskCmd(buf).List()
+		return router.Root.TaskCmd(bufnr).List()
 	}
 
 	return newErr(errInvalidReadPath, path)
 }
 
 // Write : from buffer to datastore
-func (router *Router) Write(buf nvim.Buffer) error {
-	path, err := router.Vim.BufferName(buf)
+func (router *Router) Write(bufnr nvim.Buffer) error {
+	path, err := router.Vim.BufferName(bufnr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -91,7 +91,7 @@ func (router *Router) Write(buf nvim.Buffer) error {
 
 	switch r {
 	case route.TasksNew:
-		return router.Root.TaskCmd(buf).Create()
+		return router.Root.TaskCmd(bufnr).Create()
 	}
 
 	return newErr(errInvalidWritePath, path)

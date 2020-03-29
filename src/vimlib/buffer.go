@@ -10,12 +10,40 @@ import (
 	"github.com/pkg/errors"
 )
 
-// BufferClient :
-type BufferClient struct {
+// BufferClientFactory :
+type BufferClientFactory struct {
 	Vim *nvim.Nvim
 
 	NsID         int
 	getNamespace sync.Once
+}
+
+// Current :
+func (factory *BufferClientFactory) Current() *BufferClient {
+	return factory.Get(0)
+}
+
+// Get :
+func (factory *BufferClientFactory) Get(bufnr nvim.Buffer) *BufferClient {
+	factory.getNamespace.Do(func() {
+		ns, err := factory.Vim.CreateNamespace("counteria")
+		if err != nil {
+			panic(err)
+		}
+		factory.NsID = ns
+	})
+	return &BufferClient{
+		Vim:   factory.Vim,
+		Bufnr: bufnr,
+		NsID:  factory.NsID,
+	}
+}
+
+// BufferClient :
+type BufferClient struct {
+	Vim   *nvim.Nvim
+	Bufnr nvim.Buffer
+	NsID  int
 }
 
 // LineState :
@@ -29,8 +57,8 @@ type LineStates map[string]LineState
 const stateKeyName = "_counteria_state"
 
 // SaveLineState :
-func (client *BufferClient) SaveLineState(buf nvim.Buffer, states LineStates) error {
-	if err := client.Vim.SetBufferVar(buf, stateKeyName, states); err != nil {
+func (client *BufferClient) SaveLineState(states LineStates) error {
+	if err := client.Vim.SetBufferVar(client.Bufnr, stateKeyName, states); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -38,16 +66,8 @@ func (client *BufferClient) SaveLineState(buf nvim.Buffer, states LineStates) er
 
 // LoadLineState :
 func (client *BufferClient) LoadLineState() (*LineState, error) {
-	client.getNamespace.Do(func() {
-		ns, err := client.Vim.CreateNamespace("counteria")
-		if err != nil {
-			panic(err)
-		}
-		client.NsID = ns
-	})
-
 	states := LineStates{}
-	if err := client.Vim.BufferVar(0, stateKeyName, states); err != nil {
+	if err := client.Vim.BufferVar(client.Bufnr, stateKeyName, states); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -60,7 +80,7 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 	start := []int{line, 0}
 	end := []int{line, -1}
 	noneOpts := map[string]interface{}{}
-	marks, err := client.Vim.BufferExtmarks(0, client.NsID, start, end, noneOpts)
+	marks, err := client.Vim.BufferExtmarks(client.Bufnr, client.NsID, start, end, noneOpts)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -79,10 +99,70 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 }
 
 // Reader :
-func (client *BufferClient) Reader(buf nvim.Buffer) (io.Reader, error) {
-	b, err := client.Vim.BufferLines(buf, 0, -1, false)
+func (client *BufferClient) Reader() (io.Reader, error) {
+	b, err := client.Vim.BufferLines(client.Bufnr, 0, -1, false)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return bytes.NewReader(bytes.Join(b, nil)), nil
+}
+
+// Save :
+func (client *BufferClient) Save() error {
+	batch := client.Vim.NewBatch()
+	batch.SetBufferOption(client.Bufnr, "modified", false)
+	if err := batch.Execute(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// SetLines :
+func (client *BufferClient) SetLines(lines [][]byte, opts ...func(*nvim.Batch)) error {
+	batch := client.Vim.NewBatch()
+	batch.ClearBufferNamespace(client.Bufnr, client.NsID, 0, -1)
+	batch.SetBufferOption(client.Bufnr, "modifiable", true)
+	batch.SetBufferLines(client.Bufnr, 0, -1, false, lines)
+
+	for _, opt := range opts {
+		opt(batch)
+	}
+
+	batch.SetBufferOption(client.Bufnr, "modified", false)
+
+	if err := batch.Execute(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// WithBufferType :
+func (client *BufferClient) WithBufferType(typ string) func(*nvim.Batch) {
+	return func(batch *nvim.Batch) {
+		batch.SetBufferOption(client.Bufnr, "buftype", typ)
+	}
+}
+
+// WithFileType :
+func (client *BufferClient) WithFileType(typ string) func(*nvim.Batch) {
+	return func(batch *nvim.Batch) {
+		batch.SetBufferOption(client.Bufnr, "filetype", typ)
+	}
+}
+
+// WithModifiable :
+func (client *BufferClient) WithModifiable(modifiable bool) func(*nvim.Batch) {
+	return func(batch *nvim.Batch) {
+		batch.SetBufferOption(client.Bufnr, "modifiable", modifiable)
+	}
+}
+
+// WithExtmarks :
+func (client *BufferClient) WithExtmarks(results []int) func(*nvim.Batch) {
+	noneOpts := map[string]interface{}{}
+	return func(batch *nvim.Batch) {
+		for i := range results {
+			batch.SetBufferExtmark(client.Bufnr, client.NsID, 0, i, 0, noneOpts, &results[i])
+		}
+	}
 }

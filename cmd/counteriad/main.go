@@ -48,18 +48,14 @@ func run() error {
 		return errors.WithStack(err)
 	}
 
-	redirector := &route.Redirector{Vim: vim}
 	handler := internal.NewHandler(
 		router.New(
 			vim,
 			&command.RootCommand{
-				Renderer: &view.Renderer{
-					Vim:          vim,
-					BufferClient: &vimlib.BufferClient{Vim: vim},
-					Redirector:   redirector,
-				},
-				Redirector: redirector,
-				Dep:        dep,
+				Renderer:            &view.Renderer{Vim: vim},
+				BufferClientFactory: &vimlib.BufferClientFactory{Vim: vim},
+				Redirector:          &route.Redirector{Vim: vim},
+				Dep:                 dep,
 			},
 		),
 	)

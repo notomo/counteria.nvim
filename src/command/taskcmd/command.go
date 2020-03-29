@@ -4,12 +4,14 @@ import (
 	"github.com/notomo/counteria.nvim/src/domain/repository"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 // Command :
 type Command struct {
 	Renderer       *view.BufferRenderer
+	BufferClient   *vimlib.BufferClient
 	Redirector     *route.Redirector
 	TaskRepository repository.TaskRepository
 }
@@ -26,7 +28,7 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	reader, err := cmd.Renderer.BufferClient.Reader(cmd.Renderer.Buffer)
+	reader, err := cmd.BufferClient.Reader()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -40,7 +42,7 @@ func (cmd *Command) Create() error {
 		return errors.WithStack(err)
 	}
 
-	if err := cmd.Renderer.Save(); err != nil {
+	if err := cmd.BufferClient.Save(); err != nil {
 		return errors.WithStack(err)
 	}
 

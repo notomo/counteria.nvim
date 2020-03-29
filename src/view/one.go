@@ -18,14 +18,12 @@ func (renderer *BufferRenderer) OneNewTask(task model.Task) error {
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
 
-	buf := renderer.Buffer
-
-	batch := renderer.Vim.NewBatch()
-	batch.SetBufferLines(buf, 0, -1, true, lines[:len(lines)-1])
-	batch.SetBufferOption(buf, "buftype", "acwrite")
-	batch.SetBufferOption(buf, "modified", false)
-
-	if err := batch.Execute(); err != nil {
+	buffer := renderer.BufferClient
+	if err := buffer.SetLines(
+		lines[:len(lines)-1],
+		buffer.WithBufferType("acwrite"),
+		buffer.WithModifiable(true),
+	); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -42,16 +40,12 @@ func (renderer *BufferRenderer) OneTask(task model.Task) error {
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
 
-	buf := renderer.Buffer
-
-	batch := renderer.Vim.NewBatch()
-	batch.SetBufferOption(buf, "modifiable", true)
-	batch.SetBufferLines(buf, 0, -1, true, lines[:len(lines)-1])
-	batch.SetBufferOption(buf, "buftype", "nofile")
-	batch.SetBufferOption(buf, "modified", false)
-	batch.SetBufferOption(buf, "modifiable", false)
-
-	if err := batch.Execute(); err != nil {
+	buffer := renderer.BufferClient
+	if err := buffer.SetLines(
+		lines[:len(lines)-1],
+		buffer.WithBufferType("nofile"),
+		buffer.WithModifiable(false),
+	); err != nil {
 		return errors.WithStack(err)
 	}
 

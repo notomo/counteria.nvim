@@ -8,7 +8,7 @@ import (
 )
 
 func (router *Router) do(args []string) error {
-	state, err := router.BufferClient.LoadLineState()
+	state, err := router.BufferClientFactory.Current().LoadLineState()
 	if err != nil {
 		return errors.WithStack(err)
 	}

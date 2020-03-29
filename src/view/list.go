@@ -15,24 +15,16 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 	for _, task := range tasks {
 		lines = append(lines, []byte(task.Name()))
 	}
-
-	buf := renderer.Buffer
-	batch := renderer.Vim.NewBatch()
-	batch.ClearBufferNamespace(buf, renderer.NsID, 0, -1)
-	batch.SetBufferOption(buf, "modifiable", true)
-	batch.SetBufferLines(buf, 0, -1, false, lines)
-
-	noneOpts := map[string]interface{}{}
 	markIDs := make([]int, len(tasks))
-	for i := range tasks {
-		batch.SetBufferExtmark(buf, renderer.NsID, 0, i, 0, noneOpts, &markIDs[i])
-	}
 
-	batch.SetBufferOption(buf, "modifiable", false)
-	batch.SetBufferOption(buf, "buftype", "nofile")
-	batch.SetBufferOption(buf, "modified", false)
-	batch.SetBufferOption(buf, "filetype", "counteria-tasks")
-	if err := batch.Execute(); err != nil {
+	buffer := renderer.BufferClient
+	if err := buffer.SetLines(
+		lines,
+		buffer.WithBufferType("nofile"),
+		buffer.WithFileType("counteria-tasks"),
+		buffer.WithModifiable(false),
+		buffer.WithExtmarks(markIDs),
+	); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -50,7 +42,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		state := vimlib.LineState{Path: path}
 		states[id] = state
 	}
-	if err := renderer.BufferClient.SaveLineState(buf, states); err != nil {
+	if err := buffer.SaveLineState(states); err != nil {
 		return errors.WithStack(err)
 	}
 
