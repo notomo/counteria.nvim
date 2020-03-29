@@ -58,3 +58,13 @@ func (re *Redirector) Do(r Route, params Params) error {
 func (re *Redirector) ToTasksOne(taskID int) error {
 	return re.Do(TasksOne, Params{"taskId": strconv.Itoa(taskID)})
 }
+
+// ToPath :
+func (re *Redirector) ToPath(path string) error {
+	route, params, err := Reads.Match(path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return re.Do(route, params)
+}

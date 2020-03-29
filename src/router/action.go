@@ -13,12 +13,7 @@ func (router *Router) do(args []string) error {
 		return errors.WithStack(err)
 	}
 
-	r, params, err := router.readRoutes.Match(state.Path)
-	if err != nil {
-		return newErr(errInvalidRoute, err.Error())
-	}
-
-	if err := router.Redirector.Do(r, params); err != nil {
+	if err := router.Redirector.ToPath(state.Path); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -27,12 +22,7 @@ func (router *Router) do(args []string) error {
 
 func (router *Router) open(args []string) error {
 	path := route.Schema + strings.Join(args, "")
-	r, params, err := router.readRoutes.Match(path)
-	if err != nil {
-		return newErr(errInvalidRoute, err.Error())
-	}
-
-	if err := router.Redirector.Do(r, params); err != nil {
+	if err := router.Redirector.ToPath(path); err != nil {
 		return errors.WithStack(err)
 	}
 

@@ -91,6 +91,18 @@ func (params Params) TaskID() int {
 // Routes :
 type Routes []Route
 
+// Reads : read routes
+var Reads = Routes{
+	TasksNew,
+	TasksOne,
+	TasksList,
+}
+
+// Writes : write routes
+var Writes = Routes{
+	TasksNew,
+}
+
 // Match :
 func (routes Routes) Match(path string) (Route, Params, error) {
 	for _, r := range routes {

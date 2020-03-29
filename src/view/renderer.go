@@ -65,19 +65,6 @@ func (renderer *BufferRenderer) Decode(result interface{}) error {
 	return nil
 }
 
-// SaveAndRedirect :
-func (renderer *BufferRenderer) SaveAndRedirect(r route.Route, params route.Params) error {
-	if err := renderer.Save(); err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err := renderer.Redirector.Do(r, params); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
 // Save :
 func (renderer *BufferRenderer) Save() error {
 	batch := renderer.Vim.NewBatch()

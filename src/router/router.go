@@ -18,8 +18,6 @@ type Router struct {
 	Root         *command.RootCommand
 	BufferClient *vimlib.BufferClient
 	Redirector   *route.Redirector
-	readRoutes   route.Routes
-	writeRoutes  route.Routes
 }
 
 // New :
@@ -29,14 +27,6 @@ func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 		Root:         root,
 		BufferClient: root.Renderer.BufferClient,
 		Redirector:   root.Renderer.Redirector,
-		readRoutes: route.Routes{
-			route.TasksNew,
-			route.TasksOne,
-			route.TasksList,
-		},
-		writeRoutes: route.Routes{
-			route.TasksNew,
-		},
 	}
 }
 
@@ -70,7 +60,7 @@ func (router *Router) Read(buf nvim.Buffer) error {
 		return errors.WithStack(err)
 	}
 
-	r, params, err := router.readRoutes.Match(path)
+	r, params, err := route.Reads.Match(path)
 	if err != nil {
 		return newErr(errInvalidReadPath, err.Error())
 	}
@@ -94,7 +84,7 @@ func (router *Router) Write(buf nvim.Buffer) error {
 		return errors.WithStack(err)
 	}
 
-	r, _, err := router.readRoutes.Match(path)
+	r, _, err := route.Writes.Match(path)
 	if err != nil {
 		return newErr(errInvalidWritePath, err.Error())
 	}
