@@ -9,25 +9,56 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Method :
+type Method string
+
+var (
+	// MethodRead :
+	MethodRead = Method("read")
+	// MethodWrite : create, update
+	MethodWrite = Method("write")
+	// MethodDelete :
+	MethodDelete = Method("delete")
+)
+
+// Methods :
+type Methods []Method
+
+// Match :
+func (methods Methods) Match(method Method) bool {
+	for _, m := range methods {
+		if m == method {
+			return true
+		}
+	}
+	return false
+}
+
 // Route :
 type Route struct {
-	path    string
+	Path    string
 	pattern *regexp.Regexp
+	methods Methods
 }
 
 var placeHolder = regexp.MustCompile(":([A-Za-z0-9]+)")
 
-func newRoute(path string) Route {
+func newRoute(path string, methods ...Method) Route {
 	replaced := placeHolder.ReplaceAllString(path, "(?P<$1>\\d+)")
 	pattern := fmt.Sprintf("^%s$", replaced)
 	return Route{
-		path:    path,
+		Path:    path,
 		pattern: regexp.MustCompile(pattern),
+		methods: methods,
 	}
 }
 
 // Match :
-func (r Route) Match(path string) (Params, bool) {
+func (r Route) Match(method Method, path string) (Params, bool) {
+	if !r.methods.Match(method) {
+		return nil, false
+	}
+
 	match := r.pattern.FindStringSubmatch(path)
 	if len(match) == 0 {
 		return nil, false
@@ -44,7 +75,7 @@ func (r Route) Match(path string) (Params, bool) {
 
 // BuildPath :
 func (r Route) BuildPath(params Params) (string, error) {
-	if strings.Count(r.path, "/:") != len(params) {
+	if strings.Count(r.Path, "/:") != len(params) {
 		return "", errors.Errorf("invalid params: %s", params)
 	}
 
@@ -54,7 +85,7 @@ func (r Route) BuildPath(params Params) (string, error) {
 		replaces = append(replaces, old, val)
 	}
 	replacer := strings.NewReplacer(replaces...)
-	replaced := replacer.Replace(r.path)
+	replaced := replacer.Replace(r.Path)
 
 	remain := strings.Index(replaced, "/:")
 	if remain != -1 {
@@ -69,11 +100,11 @@ const Schema = "counteria://"
 
 var (
 	// TasksNew :
-	TasksNew = newRoute(Schema + "tasks/new")
+	TasksNew = newRoute(Schema+"tasks/new", MethodRead, MethodWrite)
 	// TasksOne :
-	TasksOne = newRoute(Schema + "tasks/:taskId")
+	TasksOne = newRoute(Schema+"tasks/:taskId", MethodRead, MethodDelete)
 	// TasksList :
-	TasksList = newRoute(Schema + "tasks")
+	TasksList = newRoute(Schema+"tasks", MethodRead)
 )
 
 // Params :
@@ -91,22 +122,17 @@ func (params Params) TaskID() int {
 // Routes :
 type Routes []Route
 
-// Reads : read routes
-var Reads = Routes{
+// All : all routes
+var All = Routes{
 	TasksNew,
 	TasksOne,
 	TasksList,
 }
 
-// Writes : write routes
-var Writes = Routes{
-	TasksNew,
-}
-
 // Match :
-func (routes Routes) Match(path string) (Route, Params, error) {
+func (routes Routes) Match(method Method, path string) (Route, Params, error) {
 	for _, r := range routes {
-		params, ok := r.Match(path)
+		params, ok := r.Match(method, path)
 		if ok {
 			return r, params, nil
 		}

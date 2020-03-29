@@ -10,6 +10,7 @@ import (
 type TaskRepository interface {
 	List() ([]model.Task, error)
 	Create(model.Task) error
+	Delete(model.Task) error
 	One(int) (model.Task, error)
 	Temporary() model.Task
 	From(io.Reader) (model.Task, error)

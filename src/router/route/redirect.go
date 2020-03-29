@@ -14,7 +14,7 @@ type Redirector struct {
 }
 
 // Do : redirect by route
-func (re *Redirector) Do(r Route, params Params) error {
+func (re *Redirector) Do(r Route, params Params, method Method) error {
 	path, err := r.BuildPath(params)
 	if err != nil {
 		return errors.WithStack(err)
@@ -47,7 +47,7 @@ func (re *Redirector) Do(r Route, params Params) error {
 	}
 
 	var unused interface{}
-	if err := re.Vim.Call("counteria#read", unused, true, buf); err != nil {
+	if err := re.Vim.Call("counteria#request", unused, method, true, buf); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -56,15 +56,20 @@ func (re *Redirector) Do(r Route, params Params) error {
 
 // ToTasksOne :
 func (re *Redirector) ToTasksOne(taskID int) error {
-	return re.Do(TasksOne, Params{"taskId": strconv.Itoa(taskID)})
+	return re.Do(TasksOne, Params{"taskId": strconv.Itoa(taskID)}, MethodRead)
+}
+
+// ToTasksList :
+func (re *Redirector) ToTasksList() error {
+	return re.Do(TasksList, Params{}, MethodRead)
 }
 
 // ToPath :
-func (re *Redirector) ToPath(path string) error {
-	route, params, err := Reads.Match(path)
+func (re *Redirector) ToPath(method Method, path string) error {
+	route, params, err := All.Match(method, path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return re.Do(route, params)
+	return re.Do(route, params, method)
 }

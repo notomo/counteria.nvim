@@ -16,24 +16,13 @@ function! counteria#main(...) abort
     return s:job
 endfunction
 
-function! counteria#read(sync, bufnr) abort
+function! counteria#request(method, sync, bufnr) abort
     if !exists('s:job')
         let s:job = counteria#job#new()
     endif
     call s:job.start(s:executable)
 
-    call s:job.call(a:sync, 'read', a:bufnr)
-
-    return s:job
-endfunction
-
-function! counteria#write(sync, bufnr) abort
-    if !exists('s:job')
-        let s:job = counteria#job#new()
-    endif
-    call s:job.start(s:executable)
-
-    call s:job.call(a:sync, 'write', a:bufnr)
+    call s:job.call(a:sync, 'request', a:method, a:bufnr)
 
     return s:job
 endfunction

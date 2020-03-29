@@ -53,48 +53,41 @@ func (router *Router) Do(args []string) error {
 	return nil
 }
 
-// Read : from datastore to buffer
-func (router *Router) Read(bufnr nvim.Buffer) error {
+// Request :
+func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 	path, err := router.Vim.BufferName(bufnr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	r, params, err := route.Reads.Match(path)
+	r, params, err := route.All.Match(method, path)
 	if err != nil {
-		return newErr(errInvalidReadPath, err.Error())
+		return newErr(errInvalidRoute, err.Error())
 	}
 
-	switch r {
-	case route.TasksNew:
-		return router.Root.TaskCmd(bufnr).CreateForm()
-	case route.TasksOne:
-		return router.Root.TaskCmd(bufnr).ShowOne(params.TaskID())
-	case route.TasksList:
-		return router.Root.TaskCmd(bufnr).List()
+	switch method {
+	case route.MethodRead:
+		switch r.Path {
+		case route.TasksNew.Path:
+			return router.Root.TaskCmd(bufnr).CreateForm()
+		case route.TasksOne.Path:
+			return router.Root.TaskCmd(bufnr).ShowOne(params.TaskID())
+		case route.TasksList.Path:
+			return router.Root.TaskCmd(bufnr).List()
+		}
+	case route.MethodWrite:
+		switch r.Path {
+		case route.TasksNew.Path:
+			return router.Root.TaskCmd(bufnr).Create()
+		}
+	case route.MethodDelete:
+		switch r.Path {
+		case route.TasksOne.Path:
+			return router.Root.TaskCmd(bufnr).Delete(params.TaskID())
+		}
 	}
 
-	return newErr(errInvalidReadPath, path)
-}
-
-// Write : from buffer to datastore
-func (router *Router) Write(bufnr nvim.Buffer) error {
-	path, err := router.Vim.BufferName(bufnr)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	r, _, err := route.Writes.Match(path)
-	if err != nil {
-		return newErr(errInvalidWritePath, err.Error())
-	}
-
-	switch r {
-	case route.TasksNew:
-		return router.Root.TaskCmd(bufnr).Create()
-	}
-
-	return newErr(errInvalidWritePath, path)
+	return newErr(errInvalidRoute, path)
 }
 
 // Error :

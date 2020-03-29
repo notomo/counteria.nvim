@@ -39,6 +39,14 @@ func (repo *TaskRepository) Create(task model.Task) error {
 	return nil
 }
 
+// Delete :
+func (repo *TaskRepository) Delete(task model.Task) error {
+	if _, err := repo.Db.Delete(task); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // One :
 func (repo *TaskRepository) One(id int) (model.Task, error) {
 	var task Task

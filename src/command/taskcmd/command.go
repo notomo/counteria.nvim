@@ -63,3 +63,17 @@ func (cmd *Command) CreateForm() error {
 	task := cmd.TaskRepository.Temporary()
 	return cmd.Renderer.OneNewTask(task)
 }
+
+// Delete :
+func (cmd *Command) Delete(taskID int) error {
+	task, err := cmd.TaskRepository.One(taskID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cmd.TaskRepository.Delete(task); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return cmd.Redirector.ToTasksList()
+}

@@ -3,6 +3,7 @@ package internal
 import (
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/router"
+	"github.com/notomo/counteria.nvim/src/router/route"
 )
 
 // Handler : rpc handler
@@ -27,17 +28,9 @@ func (handler *Handler) Do(args []string) error {
 	return nil
 }
 
-// Read : entry point for "read"
-func (handler *Handler) Read(buf nvim.Buffer) error {
-	if err := handler.Router.Read(buf); err != nil {
-		return handler.Router.Error(err)
-	}
-	return nil
-}
-
-// Write : entry point for "write"
-func (handler *Handler) Write(buf nvim.Buffer) error {
-	if err := handler.Router.Write(buf); err != nil {
+// Request : entry point for "request"
+func (handler *Handler) Request(method route.Method, buf nvim.Buffer) error {
+	if err := handler.Router.Request(method, buf); err != nil {
 		return handler.Router.Error(err)
 	}
 	return nil

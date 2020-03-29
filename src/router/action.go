@@ -13,7 +13,17 @@ func (router *Router) do(args []string) error {
 		return errors.WithStack(err)
 	}
 
-	if err := router.Redirector.ToPath(state.Path); err != nil {
+	method := route.MethodRead
+	if len(args) != 0 {
+		switch args[0] {
+		case "delete":
+			method = route.MethodDelete
+		default:
+			return errors.Errorf("invalid args: %s", args)
+		}
+	}
+
+	if err := router.Redirector.ToPath(method, state.Path); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -22,7 +32,7 @@ func (router *Router) do(args []string) error {
 
 func (router *Router) open(args []string) error {
 	path := route.Schema + strings.Join(args, "")
-	if err := router.Redirector.ToPath(path); err != nil {
+	if err := router.Redirector.ToPath(route.MethodRead, path); err != nil {
 		return errors.WithStack(err)
 	}
 

@@ -69,6 +69,10 @@ function! TestHelper() abort
         call themis#log(execute('messages'))
     endfunction
 
+    function! helper.replace_line(new_line) abort
+        call setline('.', a:new_line)
+    endfunction
+
     return helper
 endfunction
 
@@ -88,10 +92,22 @@ function! s:assert() abort
     endfunction
 
     function! assert.match_path(expected) abort
-        let expected = '\v' . a:expected
+        let expected = '\v^' . a:expected . '$'
         let actual = expand('%:p')
         let message = printf('file path should match %s, but actual: %s', a:expected, actual)
         call self.match(actual, expected, message)
+    endfunction
+
+    function! assert.not_found(pattern) abort
+        let result = search(a:pattern, 'nw')
+        let message = printf('"%s" should not be found, but found at line: %s', a:pattern, result)
+        call self.false(result, message)
+    endfunction
+
+    function! assert.line_count(expected) abort
+        let actual = line('$')
+        let message = printf('line count should be %s, but actual: %s', a:expected, actual)
+        call self.equals(actual, a:expected, message)
     endfunction
 
     return assert
