@@ -102,7 +102,7 @@ var (
 	// TasksNew :
 	TasksNew = newRoute(Schema+"tasks/new", MethodRead, MethodWrite)
 	// TasksOne :
-	TasksOne = newRoute(Schema+"tasks/:taskId", MethodRead, MethodDelete)
+	TasksOne = newRoute(Schema+"tasks/:taskId", MethodRead, MethodWrite, MethodDelete)
 	// TasksList :
 	TasksList = newRoute(Schema+"tasks", MethodRead)
 )

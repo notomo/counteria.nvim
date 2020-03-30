@@ -47,6 +47,14 @@ func (repo *TaskRepository) Delete(task model.Task) error {
 	return nil
 }
 
+// Update :
+func (repo *TaskRepository) Update(task model.Task) error {
+	if _, err := repo.Db.Update(task); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 // One :
 func (repo *TaskRepository) One(id int) (model.Task, error) {
 	var task Task

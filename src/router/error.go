@@ -3,9 +3,7 @@ package router
 import "fmt"
 
 var (
-	errInvalidRoute     = fmt.Errorf("invalid route")
-	errInvalidReadPath  = fmt.Errorf("invalid read path")
-	errInvalidWritePath = fmt.Errorf("invalid write path")
+	errInvalidRoute = fmt.Errorf("invalid route")
 )
 
 type routeErr struct {

@@ -79,6 +79,8 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 		switch r.Path {
 		case route.TasksNew.Path:
 			return router.Root.TaskCmd(bufnr).Create()
+		case route.TasksOne.Path:
+			return router.Root.TaskCmd(bufnr).Update(params.TaskID())
 		}
 	case route.MethodDelete:
 		switch r.Path {

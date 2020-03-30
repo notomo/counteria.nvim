@@ -43,8 +43,8 @@ func (renderer *BufferRenderer) OneTask(task model.Task) error {
 	buffer := renderer.BufferClient
 	if err := buffer.SetLines(
 		lines[:len(lines)-1],
-		buffer.WithBufferType("nofile"),
-		buffer.WithModifiable(false),
+		buffer.WithBufferType("acwrite"),
+		buffer.WithModifiable(true),
 	); err != nil {
 		return errors.WithStack(err)
 	}

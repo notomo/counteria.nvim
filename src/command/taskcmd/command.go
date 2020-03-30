@@ -77,3 +77,22 @@ func (cmd *Command) Delete(taskID int) error {
 
 	return cmd.Redirector.ToTasksList()
 }
+
+// Update :
+func (cmd *Command) Update(taskID int) error {
+	reader, err := cmd.BufferClient.Reader()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	task, err := cmd.TaskRepository.From(reader)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cmd.TaskRepository.Update(task); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return cmd.ShowOne(task.ID())
+}
