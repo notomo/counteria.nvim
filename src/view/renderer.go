@@ -12,14 +12,14 @@ type Renderer struct {
 
 // BufferRenderer : for vim buffer
 type BufferRenderer struct {
-	Vim          *nvim.Nvim
-	BufferClient *vimlib.BufferClient
+	Vim    *nvim.Nvim
+	Buffer *vimlib.BufferClient
 }
 
 // Buffer :
 func (renderer *Renderer) Buffer(client *vimlib.BufferClient) *BufferRenderer {
 	return &BufferRenderer{
-		Vim:          renderer.Vim,
-		BufferClient: client,
+		Vim:    renderer.Vim,
+		Buffer: client,
 	}
 }

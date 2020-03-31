@@ -40,13 +40,12 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 	}
 
 	markIDs := make([]int, len(tasks))
-	buffer := renderer.BufferClient
-	if err := buffer.SetLines(
+	if err := renderer.Buffer.SetLines(
 		lines,
-		buffer.WithBufferType("nofile"),
-		buffer.WithFileType("counteria-tasks"),
-		buffer.WithModifiable(false),
-		buffer.WithExtmarks(markIDs),
+		renderer.Buffer.WithBufferType("nofile"),
+		renderer.Buffer.WithFileType("counteria-tasks"),
+		renderer.Buffer.WithModifiable(false),
+		renderer.Buffer.WithExtmarks(markIDs),
 	); err != nil {
 		return errors.WithStack(err)
 	}
@@ -65,7 +64,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		state := vimlib.LineState{Path: path}
 		states[id] = state
 	}
-	if err := buffer.SaveLineState(states); err != nil {
+	if err := renderer.Buffer.SaveLineState(states); err != nil {
 		return errors.WithStack(err)
 	}
 

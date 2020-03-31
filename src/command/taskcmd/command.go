@@ -11,7 +11,7 @@ import (
 // Command :
 type Command struct {
 	Renderer       *view.BufferRenderer
-	BufferClient   *vimlib.BufferClient
+	Buffer         *vimlib.BufferClient
 	Redirector     *route.Redirector
 	TaskRepository repository.TaskRepository
 }
@@ -28,7 +28,7 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	reader, err := cmd.BufferClient.Reader()
+	reader, err := cmd.Buffer.Reader()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -42,7 +42,7 @@ func (cmd *Command) Create() error {
 		return errors.WithStack(err)
 	}
 
-	if err := cmd.BufferClient.Save(); err != nil {
+	if err := cmd.Buffer.Save(); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -80,7 +80,7 @@ func (cmd *Command) Delete(taskID int) error {
 
 // Update :
 func (cmd *Command) Update(taskID int) error {
-	reader, err := cmd.BufferClient.Reader()
+	reader, err := cmd.Buffer.Reader()
 	if err != nil {
 		return errors.WithStack(err)
 	}

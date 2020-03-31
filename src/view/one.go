@@ -18,11 +18,10 @@ func (renderer *BufferRenderer) OneNewTask(task model.Task) error {
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
 
-	buffer := renderer.BufferClient
-	if err := buffer.SetLines(
+	if err := renderer.Buffer.SetLines(
 		lines[:len(lines)-1],
-		buffer.WithBufferType("acwrite"),
-		buffer.WithModifiable(true),
+		renderer.Buffer.WithBufferType("acwrite"),
+		renderer.Buffer.WithModifiable(true),
 	); err != nil {
 		return errors.WithStack(err)
 	}
@@ -40,11 +39,10 @@ func (renderer *BufferRenderer) OneTask(task model.Task) error {
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
 
-	buffer := renderer.BufferClient
-	if err := buffer.SetLines(
+	if err := renderer.Buffer.SetLines(
 		lines[:len(lines)-1],
-		buffer.WithBufferType("acwrite"),
-		buffer.WithModifiable(true),
+		renderer.Buffer.WithBufferType("acwrite"),
+		renderer.Buffer.WithModifiable(true),
 	); err != nil {
 		return errors.WithStack(err)
 	}
