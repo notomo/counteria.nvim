@@ -4,4 +4,5 @@ package model
 type Task interface {
 	ID() int
 	Name() string
+	Period() Period
 }

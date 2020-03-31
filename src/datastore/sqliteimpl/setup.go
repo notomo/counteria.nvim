@@ -8,19 +8,20 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/go-gorp/gorp"
 	"github.com/notomo/counteria.nvim/src/domain"
+	"github.com/pkg/errors"
 )
 
 // Setup : tables, dependencies
 func Setup() (*domain.Dep, error) {
 	dbDirPath := filepath.Join(xdg.DataHome, "counteria")
 	if err := os.MkdirAll(dbDirPath, 0770); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	dbPath := filepath.Join(dbDirPath, "default.db")
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
@@ -28,7 +29,7 @@ func Setup() (*domain.Dep, error) {
 	dbmap.AddTableWithName(Task{}, "tasks").SetKeys(true, "id")
 
 	if err := dbmap.CreateTablesIfNotExists(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &domain.Dep{

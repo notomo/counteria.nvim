@@ -67,7 +67,12 @@ func (repo *TaskRepository) One(id int) (model.Task, error) {
 
 // Temporary :
 func (repo *TaskRepository) Temporary() model.Task {
-	return &Task{}
+	return &Task{
+		TaskPeriod: TaskPeriod{
+			PeriodNumber: 1,
+			PeriodUnit:   model.PeriodUnitDay,
+		},
+	}
 }
 
 // From :
@@ -84,6 +89,7 @@ func (repo *TaskRepository) From(reader io.Reader) (model.Task, error) {
 type Task struct {
 	TaskID   int    `json:"id" db:"id"`
 	TaskName string `json:"name" db:"name"`
+	TaskPeriod
 }
 
 var _ model.Task = &Task{}
@@ -96,4 +102,27 @@ func (task *Task) ID() int {
 // Name :
 func (task *Task) Name() string {
 	return task.TaskName
+}
+
+// Period :
+func (task *Task) Period() model.Period {
+	return task.TaskPeriod
+}
+
+var _ model.Period = &TaskPeriod{}
+
+// TaskPeriod :
+type TaskPeriod struct {
+	PeriodNumber int              `json:"period_number" db:"period_number"`
+	PeriodUnit   model.PeriodUnit `json:"period_unit" db:"period_unit"`
+}
+
+// Number :
+func (period TaskPeriod) Number() int {
+	return period.PeriodNumber
+}
+
+// Unit :
+func (period TaskPeriod) Unit() model.PeriodUnit {
+	return period.PeriodUnit
 }

@@ -5,4 +5,7 @@ test:
 build:
 	GO111MODULE=on go build -o ./bin/counteriad ./cmd/counteriad/main.go
 
+clear:
+	rm $(HOME)/.local/share/counteria/default.db
+
 .PHONY: test

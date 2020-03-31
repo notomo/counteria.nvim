@@ -20,7 +20,7 @@ endfunction
 function! s:suite.open_tasks_new()
     call s:helper.sync_read('counteria://tasks/new')
     call s:helper.search('name')
-    call s:helper.replace_line('"name": "new_task"')
+    call s:helper.replace_line('"name": "new_task",')
     call s:helper.sync_write()
     call s:assert.match_path('counteria://tasks/\d+')
 
@@ -36,11 +36,11 @@ endfunction
 function! s:suite.update_task()
     call s:helper.sync_read('counteria://tasks/new')
     call s:helper.search('name')
-    call s:helper.replace_line('"name": "new_task"')
+    call s:helper.replace_line('"name": "new_task",')
     call s:helper.sync_write()
 
     call s:helper.search('name')
-    call s:helper.replace_line('"name": "updated_task"')
+    call s:helper.replace_line('"name": "updated_task",')
     call s:helper.sync_write()
     call s:assert.match_path('counteria://tasks/\d+')
 
