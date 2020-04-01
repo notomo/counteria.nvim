@@ -137,5 +137,5 @@ func (routes Routes) Match(method Method, path string) (Route, Params, error) {
 			return r, params, nil
 		}
 	}
-	return Route{}, nil, errors.Errorf("not matched route: %s", path)
+	return Route{}, nil, NewErrNotFound(path)
 }

@@ -43,7 +43,7 @@ func (router *Router) Do(args []string) error {
 	case "do":
 		subRoute = router.do
 	default:
-		return newErr(errInvalidRoute, name)
+		return route.NewErrInvalidAction(name)
 	}
 
 	if err := subRoute(args[1:]); err != nil {
@@ -62,7 +62,7 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 
 	r, params, err := route.All.Match(method, path)
 	if err != nil {
-		return newErr(errInvalidRoute, err.Error())
+		return errors.WithStack(err)
 	}
 
 	switch method {
@@ -89,12 +89,12 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 		}
 	}
 
-	return newErr(errInvalidRoute, path)
+	return route.NewErrNotFound(path)
 }
 
 // Error :
 func (router *Router) Error(err error) error {
-	if _, ok := err.(*routeErr); ok {
+	if _, ok := errors.Cause(err).(*route.Err); ok {
 		msg := fmt.Sprintf("[counteria] %s\n", err)
 		return router.Vim.WriteErr(msg)
 	}
@@ -106,7 +106,7 @@ func (router *Router) Error(err error) error {
 		m := fmt.Sprintf("[countera] %s", strings.ReplaceAll(line, "\t", "    "))
 		msgs = append(msgs, m)
 	}
-	msg := strings.Join(msgs, "\n")
+	msg := strings.Join(msgs, "\n") + "\n"
 
 	log.Println(msg)
 

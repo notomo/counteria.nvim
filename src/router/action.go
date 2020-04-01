@@ -19,7 +19,7 @@ func (router *Router) do(args []string) error {
 		case "delete":
 			method = route.MethodDelete
 		default:
-			return errors.Errorf("invalid args: %s", args)
+			return route.NewErrInvalidAction("do " + strings.Join(args, " "))
 		}
 	}
 
