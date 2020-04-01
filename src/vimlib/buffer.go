@@ -68,7 +68,7 @@ func (client *BufferClient) SaveLineState(states LineStates) error {
 func (client *BufferClient) LoadLineState() (*LineState, error) {
 	states := LineStates{}
 	if err := client.Vim.BufferVar(client.Bufnr, stateKeyName, states); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, ErrNoState
 	}
 
 	pos, err := client.Vim.WindowCursor(0)
@@ -86,13 +86,13 @@ func (client *BufferClient) LoadLineState() (*LineState, error) {
 	}
 
 	if len(marks) == 0 {
-		return nil, nil
+		return nil, ErrNoState
 	}
 	id := marks[0].ExtmarkID
 
 	state, ok := states[strconv.Itoa(id)]
 	if !ok {
-		return nil, nil
+		return nil, ErrNoState
 	}
 
 	return &state, nil

@@ -4,12 +4,16 @@ import (
 	"strings"
 
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 func (router *Router) do(args []string) error {
 	state, err := router.BufferClientFactory.Current().LoadLineState()
 	if err != nil {
+		if errors.Cause(err) == vimlib.ErrNoState {
+			return route.NewErrInvalidAction(strings.Join(args, " "))
+		}
 		return errors.WithStack(err)
 	}
 
@@ -19,7 +23,7 @@ func (router *Router) do(args []string) error {
 		case "delete":
 			method = route.MethodDelete
 		default:
-			return route.NewErrInvalidAction("do " + strings.Join(args, " "))
+			return route.NewErrInvalidAction(strings.Join(args, " "))
 		}
 	}
 
