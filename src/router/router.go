@@ -7,6 +7,7 @@ import (
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/command"
+	"github.com/notomo/counteria.nvim/src/domain"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
@@ -65,6 +66,17 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 		return errors.WithStack(err)
 	}
 
+	if err := router.exec(method, path, r, params, bufnr); err != nil {
+		if errors.Cause(err) == domain.ErrNotFound {
+			return route.NewErrNotFound(path)
+		}
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (router *Router) exec(method route.Method, path string, r route.Route, params route.Params, bufnr nvim.Buffer) error {
 	switch method {
 	case route.MethodRead:
 		switch r.Path {
@@ -95,8 +107,8 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 // Error :
 func (router *Router) Error(err error) error {
 	if _, ok := errors.Cause(err).(*route.Err); ok {
-		msg := fmt.Sprintf("[counteria] %s\n", err)
-		return router.Vim.WriteErr(msg)
+		var unused interface{}
+		return router.Vim.Call("counteria#messenger#warn", unused, err.Error())
 	}
 
 	trace := fmt.Sprintf("%+v", err)
@@ -106,9 +118,9 @@ func (router *Router) Error(err error) error {
 		m := fmt.Sprintf("[countera] %s", strings.ReplaceAll(line, "\t", "    "))
 		msgs = append(msgs, m)
 	}
-	msg := strings.Join(msgs, "\n") + "\n"
+	msg := strings.Join(msgs, "\n")
 
 	log.Println(msg)
 
-	return router.Vim.WriteErr(msg)
+	return router.Vim.WritelnErr(msg)
 }

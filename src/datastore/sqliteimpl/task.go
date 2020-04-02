@@ -1,10 +1,12 @@
 package sqliteimpl
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 
 	"github.com/go-gorp/gorp"
+	"github.com/notomo/counteria.nvim/src/domain"
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/domain/repository"
 	"github.com/pkg/errors"
@@ -60,6 +62,9 @@ func (repo *TaskRepository) One(id int) (model.Task, error) {
 	var task Task
 	err := repo.Db.SelectOne(&task, "SELECT * FROM tasks WHERE id=?", id)
 	if err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			return nil, domain.ErrNotFound
+		}
 		return nil, errors.WithStack(err)
 	}
 	return &task, nil
