@@ -130,12 +130,25 @@ var All = Routes{
 }
 
 // Match :
-func (routes Routes) Match(method Method, path string) (Route, Params, error) {
+func (routes Routes) Match(method Method, path string) (Request, error) {
 	for _, r := range routes {
 		params, ok := r.Match(method, path)
 		if ok {
-			return r, params, nil
+			return Request{
+				Path:   path,
+				Method: method,
+				Route:  r,
+				Params: params,
+			}, nil
 		}
 	}
-	return Route{}, nil, NewErrNotFound(path)
+	return Request{}, NewErrNotFound(path)
+}
+
+// Request :
+type Request struct {
+	Path   string
+	Method Method
+	Route  Route
+	Params Params
 }

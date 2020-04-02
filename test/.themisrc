@@ -11,6 +11,9 @@ function! TestHelper() abort
     function! helper.before_each() abort
         execute 'cd' s:root
 
+        call counteria#messenger#set_func({ msg -> themis#log('[test messenger] ' . msg) })
+        call themis#log('')
+
         filetype on
         syntax enable
     endfunction

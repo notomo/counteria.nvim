@@ -22,7 +22,7 @@ function! counteria#request(method, sync, bufnr) abort
     endif
     call s:job.start(s:executable)
 
-    call s:job.call(a:sync, 'request', a:method, a:bufnr)
+    call s:job.call(a:sync, 'exec', a:method, a:bufnr)
 
     return s:job
 endfunction

@@ -66,10 +66,10 @@ func (re *Redirector) ToTasksList() error {
 
 // ToPath :
 func (re *Redirector) ToPath(method Method, path string) error {
-	route, params, err := All.Match(method, path)
+	req, err := All.Match(method, path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return re.Do(route, params, method)
+	return re.Do(req.Route, req.Params, req.Method)
 }

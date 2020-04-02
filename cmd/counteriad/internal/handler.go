@@ -28,9 +28,9 @@ func (handler *Handler) Do(args []string) error {
 	return nil
 }
 
-// Request : entry point for "request"
-func (handler *Handler) Request(method route.Method, buf nvim.Buffer) error {
-	if err := handler.Router.Request(method, buf); err != nil {
+// Exec : entry point for "exec"
+func (handler *Handler) Exec(method route.Method, buf nvim.Buffer) error {
+	if err := handler.Router.Exec(method, buf); err != nil {
 		return handler.Router.Error(err)
 	}
 	return nil

@@ -54,19 +54,19 @@ func (router *Router) Do(args []string) error {
 	return nil
 }
 
-// Request :
-func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
+// Exec :
+func (router *Router) Exec(method route.Method, bufnr nvim.Buffer) error {
 	path, err := router.Vim.BufferName(bufnr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	r, params, err := route.All.Match(method, path)
+	req, err := route.All.Match(method, path)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err := router.exec(method, path, r, params, bufnr); err != nil {
+	if err := router.exec(req, bufnr); err != nil {
 		if errors.Cause(err) == domain.ErrNotFound {
 			return route.NewErrNotFound(path)
 		}
@@ -76,10 +76,12 @@ func (router *Router) Request(method route.Method, bufnr nvim.Buffer) error {
 	return nil
 }
 
-func (router *Router) exec(method route.Method, path string, r route.Route, params route.Params, bufnr nvim.Buffer) error {
-	switch method {
+func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
+	path := req.Route.Path
+	params := req.Params
+	switch req.Method {
 	case route.MethodRead:
-		switch r.Path {
+		switch path {
 		case route.TasksNew.Path:
 			return router.Root.TaskCmd(bufnr).CreateForm()
 		case route.TasksOne.Path:
@@ -88,14 +90,14 @@ func (router *Router) exec(method route.Method, path string, r route.Route, para
 			return router.Root.TaskCmd(bufnr).List()
 		}
 	case route.MethodWrite:
-		switch r.Path {
+		switch path {
 		case route.TasksNew.Path:
 			return router.Root.TaskCmd(bufnr).Create()
 		case route.TasksOne.Path:
 			return router.Root.TaskCmd(bufnr).Update(params.TaskID())
 		}
 	case route.MethodDelete:
-		switch r.Path {
+		switch path {
 		case route.TasksOne.Path:
 			return router.Root.TaskCmd(bufnr).Delete(params.TaskID())
 		}
