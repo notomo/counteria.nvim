@@ -2,6 +2,7 @@ package repository
 
 import (
 	"io"
+	"time"
 
 	"github.com/notomo/counteria.nvim/src/domain/model"
 )
@@ -12,6 +13,7 @@ type TaskRepository interface {
 	Create(model.Task) error
 	Update(model.Task) error
 	Delete(model.Task) error
+	Done(model.Task, time.Time) error
 	One(id int) (model.Task, error)
 	Temporary() model.Task
 	From(id int, reader io.Reader) (model.Task, error)

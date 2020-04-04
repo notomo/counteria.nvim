@@ -23,7 +23,7 @@ var (
 
 // Renderable :
 func (m Method) Renderable() bool {
-	return m != MethodDelete || m != MethodWrite
+	return m == MethodRead
 }
 
 // Methods :
@@ -108,6 +108,8 @@ var (
 	TasksNew = newRoute(Schema+"tasks/new", MethodRead, MethodWrite)
 	// TasksOne :
 	TasksOne = newRoute(Schema+"tasks/:taskId", MethodRead, MethodWrite, MethodDelete)
+	// TasksOneDone :
+	TasksOneDone = newRoute(Schema+"tasks/:taskId/done", MethodWrite)
 	// TasksList :
 	TasksList = newRoute(Schema+"tasks", MethodRead)
 )
@@ -131,6 +133,7 @@ type Routes []Route
 var All = Routes{
 	TasksNew,
 	TasksOne,
+	TasksOneDone,
 	TasksList,
 }
 

@@ -1,6 +1,8 @@
 package taskcmd
 
 import (
+	"time"
+
 	"github.com/notomo/counteria.nvim/src/domain/repository"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
@@ -73,6 +75,20 @@ func (cmd *Command) Delete(taskID int) error {
 	}
 
 	if err := cmd.TaskRepository.Delete(task); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return cmd.Redirector.ToTasksList()
+}
+
+// Done :
+func (cmd *Command) Done(taskID int, now time.Time) error {
+	task, err := cmd.TaskRepository.One(taskID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cmd.TaskRepository.Done(task, now); err != nil {
 		return errors.WithStack(err)
 	}
 

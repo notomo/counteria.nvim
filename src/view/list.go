@@ -21,7 +21,14 @@ func toLines(tasks []model.Task) ([][]byte, error) {
 
 	for _, task := range tasks {
 		period := task.Period()
-		line := fmt.Sprintf("%s\tonce per %d %s\n", task.Name(), period.Number(), period.Unit())
+
+		at := "---------- --:--:--"
+		doneAt := task.DoneAt()
+		if doneAt != nil {
+			at = doneAt.Format("2006-01-02 15:04:05")
+		}
+
+		line := fmt.Sprintf("%s\t%s\tonce per %d %s\n", task.Name(), at, period.Number(), period.Unit())
 		w.Write([]byte(line))
 	}
 	if err := w.Flush(); err != nil {

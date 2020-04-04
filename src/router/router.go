@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/command"
@@ -112,6 +113,8 @@ func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
 			return router.Root.TaskCmd(bufnr).Create()
 		case route.TasksOne.Path:
 			return router.Root.TaskCmd(bufnr).Update(params.TaskID())
+		case route.TasksOneDone.Path:
+			return router.Root.TaskCmd(bufnr).Done(params.TaskID(), time.Now())
 		}
 	case route.MethodDelete:
 		switch path {

@@ -34,6 +34,14 @@ func Setup() (*domain.Dep, error) {
 		}
 	}
 
+	{
+		done := DoneTask{}
+		table := dbmap.AddTableWithName(done, "done_tasks").SetKeys(true, "id")
+		if err := createTable(dbmap, table, done); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
 	return &domain.Dep{
 		TaskRepository: &TaskRepository{Db: dbmap},
 	}, nil

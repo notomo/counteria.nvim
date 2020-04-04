@@ -18,16 +18,20 @@ func (router *Router) do(args []string) error {
 	}
 
 	method := route.MethodRead
+	p := state.Path
 	if len(args) != 0 {
 		switch args[0] {
 		case "delete":
 			method = route.MethodDelete
+		case "done":
+			method = route.MethodWrite
+			p = p + "/done"
 		default:
 			return route.NewErrInvalidAction(strings.Join(args, " "))
 		}
 	}
 
-	if err := router.Redirector.ToPath(method, state.Path); err != nil {
+	if err := router.Redirector.ToPath(method, p); err != nil {
 		return errors.WithStack(err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/go-gorp/gorp"
 	"github.com/notomo/counteria.nvim/src/domain"
@@ -19,18 +20,53 @@ type TaskRepository struct {
 
 var _ repository.TaskRepository = &TaskRepository{}
 
+// TaskSummary :
+type TaskSummary struct {
+	TaskID     int        `json:"id" db:"id"`
+	TaskName   string     `json:"name" db:"name"`
+	LastDoneID *int       `json:"done_id" db:"done_id"`
+	LastDoneAt *time.Time `json:"at" db:"at"`
+	TaskPeriod
+}
+
 // List :
 func (repo *TaskRepository) List() ([]model.Task, error) {
-	tasks := []Task{}
-	if _, err := repo.Db.Select(&tasks, "SELECT * FROM tasks"); err != nil {
+	summaries := []TaskSummary{}
+	if _, err := repo.Db.Select(&summaries, `
+	SELECT
+		t.*
+		,done.id AS done_id
+		,done.at
+	FROM tasks t
+	LEFT JOIN done_tasks done ON t.id = done.task_id
+		AND NOT EXISTS (
+			SELECT 1
+			FROM done_tasks d
+			WHERE t.id = d.task_id
+			AND done.at < d.at
+		)
+	`); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	ts := make([]model.Task, len(tasks))
-	for i, t := range tasks {
-		t := t
-		ts[i] = &t
+
+	tasks := make([]model.Task, len(summaries))
+	for i, t := range summaries {
+		task := &Task{
+			TaskID:     t.TaskID,
+			TaskName:   t.TaskName,
+			TaskPeriod: t.TaskPeriod,
+		}
+		if t.LastDoneID != nil {
+			task.LastDone = &DoneTask{
+				DoneTaskID: *t.LastDoneID,
+				TaskID:     task.TaskID,
+				TaskName:   task.TaskName,
+				At:         *t.LastDoneAt,
+			}
+		}
+		tasks[i] = task
 	}
-	return ts, nil
+	return tasks, nil
 }
 
 // Create :
@@ -52,6 +88,19 @@ func (repo *TaskRepository) Delete(task model.Task) error {
 // Update :
 func (repo *TaskRepository) Update(task model.Task) error {
 	if _, err := repo.Db.Update(task); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// Done :
+func (repo *TaskRepository) Done(task model.Task, now time.Time) error {
+	done := DoneTask{
+		TaskID:   task.ID(),
+		TaskName: task.Name(),
+		At:       now,
+	}
+	if err := repo.Db.Insert(&done); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -97,6 +146,8 @@ type Task struct {
 	TaskID   int    `json:"id" db:"id"`
 	TaskName string `json:"name" db:"name" check:"notEmpty"`
 	TaskPeriod
+
+	LastDone *DoneTask `json:"-" db:"-"`
 }
 
 var _ model.Task = &Task{}
@@ -116,6 +167,14 @@ func (task *Task) Period() model.Period {
 	return task.TaskPeriod
 }
 
+// DoneAt :
+func (task *Task) DoneAt() *time.Time {
+	if task.LastDone == nil {
+		return nil
+	}
+	return &task.LastDone.At
+}
+
 var _ model.Period = &TaskPeriod{}
 
 // TaskPeriod :
@@ -132,4 +191,12 @@ func (period TaskPeriod) Number() int {
 // Unit :
 func (period TaskPeriod) Unit() model.PeriodUnit {
 	return period.PeriodUnit
+}
+
+// DoneTask :
+type DoneTask struct {
+	DoneTaskID int       `json:"id" db:"id"`
+	TaskID     int       `json:"taskId" db:"task_id"`
+	TaskName   string    `json:"name" db:"name" check:"notEmpty"`
+	At         time.Time `json:"at" db:"at"`
 }

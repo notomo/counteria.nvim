@@ -13,6 +13,8 @@ function! s:suite.do_tasks_new()
     call s:helper.sync_execute('open', 'tasks')
     call s:assert.match_path('counteria://tasks')
 
+    call s:helper.sync_execute('do', 'done')
+
     call s:helper.sync_execute('do')
     call s:assert.match_path('counteria://tasks/\d+')
 endfunction

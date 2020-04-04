@@ -5,7 +5,21 @@ test:
 build:
 	GO111MODULE=on go build -o ./bin/counteriad ./cmd/counteriad/main.go
 
+DB := $(HOME)/.local/share/counteria/default.db
+
 clear:
-	rm $(HOME)/.local/share/counteria/default.db
+	rm $(DB)
+
+show:
+	sqlite3 $(DB) .tables
+	@echo
+	sqlite3 $(DB) .schema
+	@echo
+	sqlite3 $(DB) 'select * from tasks;'
+	@echo
+	sqlite3 $(DB) 'select * from done_tasks;'
 
 .PHONY: test
+.PHONY: build
+.PHONY: clear
+.PHONY: show
