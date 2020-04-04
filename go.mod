@@ -3,8 +3,10 @@ module github.com/notomo/counteria.nvim
 go 1.14
 
 require (
+	github.com/WeiZhang555/tabwriter v0.0.0-20200115015932-e5c45f4da38d
 	github.com/adrg/xdg v0.2.1
 	github.com/go-gorp/gorp v2.2.0+incompatible
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/neovim/go-client v1.1.0
 	github.com/pkg/errors v0.9.1

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"text/tabwriter"
 
+	"github.com/WeiZhang555/tabwriter"
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/vimlib"
