@@ -20,6 +20,15 @@ func (re *Redirector) Do(r Route, params Params, method Method) error {
 		return errors.WithStack(err)
 	}
 
+	if !method.Renderable() {
+		var unused interface{}
+		var buf nvim.Buffer
+		if err := re.Vim.Call("counteria#request_path", unused, method, true, path, buf); err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	}
+
 	// NOTE: avoid executing BufReadCmd
 
 	var bufnr int

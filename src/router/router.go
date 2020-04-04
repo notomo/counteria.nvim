@@ -54,6 +54,23 @@ func (router *Router) Do(args []string) error {
 	return nil
 }
 
+// ExecPath :
+func (router *Router) ExecPath(method route.Method, path string, bufnr nvim.Buffer) error {
+	req, err := route.All.Match(method, path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := router.exec(req, bufnr); err != nil {
+		if errors.Cause(err) == domain.ErrNotFound {
+			return route.NewErrNotFound(path)
+		}
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
 // Exec :
 func (router *Router) Exec(method route.Method, bufnr nvim.Buffer) error {
 	path, err := router.Vim.BufferName(bufnr)

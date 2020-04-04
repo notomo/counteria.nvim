@@ -21,6 +21,11 @@ var (
 	MethodDelete = Method("delete")
 )
 
+// Renderable :
+func (m Method) Renderable() bool {
+	return m != MethodDelete
+}
+
 // Methods :
 type Methods []Method
 

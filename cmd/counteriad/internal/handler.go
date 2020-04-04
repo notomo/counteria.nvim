@@ -36,6 +36,14 @@ func (handler *Handler) Exec(method route.Method, buf nvim.Buffer) error {
 	return nil
 }
 
+// ExecPath : entry point for "execPath"
+func (handler *Handler) ExecPath(method route.Method, path string, buf nvim.Buffer) error {
+	if err := handler.Router.ExecPath(method, path, buf); err != nil {
+		return handler.Router.Error(err)
+	}
+	return nil
+}
+
 // NOTE: for testing
 
 // StartWaiting : entry point for "startWaiting"
