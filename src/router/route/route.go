@@ -23,7 +23,7 @@ var (
 
 // Renderable :
 func (m Method) Renderable() bool {
-	return m != MethodDelete
+	return m != MethodDelete || m != MethodWrite
 }
 
 // Methods :

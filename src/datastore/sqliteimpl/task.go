@@ -82,12 +82,13 @@ func (repo *TaskRepository) Temporary() model.Task {
 }
 
 // From :
-func (repo *TaskRepository) From(reader io.Reader) (model.Task, error) {
+func (repo *TaskRepository) From(id int, reader io.Reader) (model.Task, error) {
 	task := &Task{}
 	decoder := json.NewDecoder(reader)
 	if err := decoder.Decode(task); err != nil {
 		return nil, errors.WithStack(err)
 	}
+	task.TaskID = id
 	return task, nil
 }
 

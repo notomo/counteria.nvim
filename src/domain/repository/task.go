@@ -12,7 +12,7 @@ type TaskRepository interface {
 	Create(model.Task) error
 	Update(model.Task) error
 	Delete(model.Task) error
-	One(int) (model.Task, error)
+	One(id int) (model.Task, error)
 	Temporary() model.Task
-	From(io.Reader) (model.Task, error)
+	From(id int, reader io.Reader) (model.Task, error)
 }

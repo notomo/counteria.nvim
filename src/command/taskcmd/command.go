@@ -33,7 +33,8 @@ func (cmd *Command) Create() error {
 		return errors.WithStack(err)
 	}
 
-	task, err := cmd.TaskRepository.From(reader)
+	var taskID int
+	task, err := cmd.TaskRepository.From(taskID, reader)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -85,7 +86,7 @@ func (cmd *Command) Update(taskID int) error {
 		return errors.WithStack(err)
 	}
 
-	task, err := cmd.TaskRepository.From(reader)
+	task, err := cmd.TaskRepository.From(taskID, reader)
 	if err != nil {
 		return errors.WithStack(err)
 	}
