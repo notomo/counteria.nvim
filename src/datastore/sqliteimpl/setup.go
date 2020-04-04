@@ -26,10 +26,12 @@ func Setup() (*domain.Dep, error) {
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	dbmap.AddTableWithName(Task{}, "tasks").SetKeys(true, "id")
-
-	if err := dbmap.CreateTablesIfNotExists(); err != nil {
-		return nil, errors.WithStack(err)
+	{
+		task := Task{}
+		table := dbmap.AddTableWithName(task, "tasks").SetKeys(true, "id")
+		if err := createTable(dbmap, table, task); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 
 	return &domain.Dep{

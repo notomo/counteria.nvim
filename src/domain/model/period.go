@@ -19,3 +19,13 @@ var (
 	// PeriodUnitDay :
 	PeriodUnitDay = PeriodUnit("day")
 )
+
+// PeriodUnits :
+func PeriodUnits() []PeriodUnit {
+	return []PeriodUnit{
+		PeriodUnitYear,
+		PeriodUnitMonth,
+		PeriodUnitWeek,
+		PeriodUnitDay,
+	}
+}
