@@ -2,7 +2,6 @@ package sqliteimpl
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"regexp"
 	"strings"
@@ -16,18 +15,19 @@ import (
 // CheckMap :
 type CheckMap map[string]Check
 
-func gatherChecks(val interface{}, result CheckMap) {
+func gatherChecks(val interface{}, result CheckMap) error {
 	v := reflect.TypeOf(val)
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
-		log.Println(field.Name)
 		if unicode.IsLower((rune(field.Name[0]))) {
 			continue
 		}
 
 		if field.Anonymous {
 			f := reflect.New(field.Type).Elem().Interface()
-			gatherChecks(f, result)
+			if err := gatherChecks(f, result); err != nil {
+				return errors.WithStack(err)
+			}
 			continue
 		}
 
@@ -35,8 +35,9 @@ func gatherChecks(val interface{}, result CheckMap) {
 		if !ok {
 			continue
 		}
-		if _, ok := checkFuncs[checkTag]; !ok {
-			continue
+		fn, ok := checkFuncs[checkTag]
+		if !ok {
+			return errors.New("invalid check tag: " + checkTag)
 		}
 
 		dbTag, ok := field.Tag.Lookup("db")
@@ -47,19 +48,20 @@ func gatherChecks(val interface{}, result CheckMap) {
 
 		result[columnName] = Check{
 			ColumnName: columnName,
-			Name:       checkTag,
+			Func:       fn,
 		}
 	}
+	return nil
 }
 
 // Check : check constraint
 type Check struct {
-	Name       string
+	Func       func(column string) string
 	ColumnName string
 }
 
 func (c Check) toSQLPart() string {
-	return fmt.Sprintf(", CHECK (%s)", checkFuncs[c.Name](c.ColumnName))
+	return fmt.Sprintf(", CHECK (%s)", c.Func(c.ColumnName))
 }
 
 var checkFuncs = map[string]func(string) string{
@@ -89,7 +91,6 @@ func toCreateSQL(table *gorp.TableMap, checks CheckMap) string {
 		}
 		checkParts = append(checkParts, check.toSQLPart())
 	}
-
 	checkSQL := strings.Join(checkParts, "")
 
 	ifNotExists := true
@@ -100,7 +101,9 @@ func toCreateSQL(table *gorp.TableMap, checks CheckMap) string {
 
 func createTable(dbmap *gorp.DbMap, table *gorp.TableMap, base interface{}) error {
 	checks := CheckMap{}
-	gatherChecks(base, checks)
+	if err := gatherChecks(base, checks); err != nil {
+		return errors.WithStack(err)
+	}
 
 	sql := toCreateSQL(table, checks)
 	if _, err := dbmap.Exec(sql); err != nil {
