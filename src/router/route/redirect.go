@@ -2,7 +2,6 @@ package route
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/pkg/errors"
@@ -19,7 +18,11 @@ func (re *Redirector) Do(r Route, params Params, method Method) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	return re.DoByPath(path, method)
+}
 
+// DoByPath :
+func (re *Redirector) DoByPath(path string, method Method) error {
 	if !method.Renderable() {
 		var unused interface{}
 		var buf nvim.Buffer
@@ -65,7 +68,11 @@ func (re *Redirector) Do(r Route, params Params, method Method) error {
 
 // ToTasksOne :
 func (re *Redirector) ToTasksOne(taskID int) error {
-	return re.Do(TasksOne, Params{"taskId": strconv.Itoa(taskID)}, MethodRead)
+	path, err := TasksOnePath(taskID)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return re.DoByPath(path, MethodRead)
 }
 
 // ToTasksList :

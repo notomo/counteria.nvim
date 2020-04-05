@@ -3,7 +3,6 @@ package view
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 
 	"github.com/WeiZhang555/tabwriter"
 	"github.com/notomo/counteria.nvim/src/domain/model"
@@ -60,13 +59,10 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 
 	states := vimlib.LineStates{}
 	for i, task := range tasks {
-		r := route.TasksOne
-		params := route.Params{"taskId": strconv.Itoa(task.ID())}
-		path, err := r.BuildPath(params)
+		path, err := route.TasksOnePath(task.ID())
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
 		states.Add(markIDs[i], path)
 	}
 	if err := renderer.Buffer.SaveLineState(states); err != nil {

@@ -160,3 +160,9 @@ type Request struct {
 	Route  Route
 	Params Params
 }
+
+// TasksOnePath :
+func TasksOnePath(taskID int) (string, error) {
+	params := Params{"taskId": strconv.Itoa(taskID)}
+	return TasksOne.BuildPath(params)
+}
