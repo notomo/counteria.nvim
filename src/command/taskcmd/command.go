@@ -12,10 +12,11 @@ import (
 
 // Command :
 type Command struct {
-	Renderer       *view.BufferRenderer
-	Buffer         *vimlib.BufferClient
-	Redirector     *route.Redirector
-	TaskRepository repository.TaskRepository
+	Renderer           *view.BufferRenderer
+	Buffer             *vimlib.BufferClient
+	Redirector         *route.Redirector
+	TaskRepository     repository.TaskRepository
+	TransactionFactory repository.TransactionFactory
 }
 
 // List :
@@ -74,7 +75,17 @@ func (cmd *Command) Delete(taskID int) error {
 		return errors.WithStack(err)
 	}
 
-	if err := cmd.TaskRepository.Delete(task); err != nil {
+	transaction, err := cmd.TransactionFactory.Begin()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := cmd.TaskRepository.Delete(transaction, task); err != nil {
+		if err := transaction.Rollback(); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(err)
+	}
+	if err := transaction.Commit(); err != nil {
 		return errors.WithStack(err)
 	}
 

@@ -26,23 +26,18 @@ func Setup() (*domain.Dep, error) {
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	{
-		task := Task{}
-		table := dbmap.AddTableWithName(task, "tasks").SetKeys(true, "id")
-		if err := createTable(dbmap, table, task); err != nil {
-			return nil, errors.WithStack(err)
-		}
+	if err := createTable(dbmap, Task{}, "tasks"); err != nil {
+		return nil, errors.WithStack(err)
 	}
-
-	{
-		done := DoneTask{}
-		table := dbmap.AddTableWithName(done, "done_tasks").SetKeys(true, "id")
-		if err := createTable(dbmap, table, done); err != nil {
-			return nil, errors.WithStack(err)
-		}
+	if err := createTable(dbmap, DoneTask{}, "done_tasks"); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if _, err := dbmap.Exec("PRAGMA foreign_keys=true"); err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	return &domain.Dep{
-		TaskRepository: &TaskRepository{Db: dbmap},
+		TaskRepository:     &TaskRepository{Db: dbmap},
+		TransactionFactory: &TransactionFactory{Db: dbmap},
 	}, nil
 }

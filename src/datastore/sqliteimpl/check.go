@@ -15,7 +15,7 @@ import (
 // CheckMap :
 type CheckMap map[string]Check
 
-func gatherChecks(val interface{}, result CheckMap) error {
+func (c CheckMap) gather(val interface{}) error {
 	v := reflect.TypeOf(val)
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
@@ -25,7 +25,7 @@ func gatherChecks(val interface{}, result CheckMap) error {
 
 		if field.Anonymous {
 			f := reflect.New(field.Type).Elem().Interface()
-			if err := gatherChecks(f, result); err != nil {
+			if err := c.gather(f); err != nil {
 				return errors.WithStack(err)
 			}
 			continue
@@ -46,7 +46,7 @@ func gatherChecks(val interface{}, result CheckMap) error {
 		}
 		columnName := strings.Split(dbTag, ",")[0]
 
-		result[columnName] = Check{
+		c[columnName] = Check{
 			ColumnName: columnName,
 			Func:       fn,
 		}
@@ -82,7 +82,7 @@ var checkFuncs = map[string]func(string) string{
 
 var sqlSuffixPattern = regexp.MustCompile(`\)\s*;$`)
 
-func toCreateSQL(table *gorp.TableMap, checks CheckMap) string {
+func toCreateSQL(table *gorp.TableMap, checks CheckMap, keys ForeignKeys) string {
 	checkParts := []string{}
 	for _, col := range table.Columns {
 		check, ok := checks[col.ColumnName]
@@ -90,6 +90,9 @@ func toCreateSQL(table *gorp.TableMap, checks CheckMap) string {
 			continue
 		}
 		checkParts = append(checkParts, check.toSQLPart())
+	}
+	for _, key := range keys {
+		checkParts = append(checkParts, key.toSQLPart())
 	}
 	checkSQL := strings.Join(checkParts, "")
 
@@ -99,13 +102,20 @@ func toCreateSQL(table *gorp.TableMap, checks CheckMap) string {
 	return sql
 }
 
-func createTable(dbmap *gorp.DbMap, table *gorp.TableMap, base interface{}) error {
+func createTable(dbmap *gorp.DbMap, base interface{}, name string) error {
+	table := dbmap.AddTableWithName(base, name)
+
 	checks := CheckMap{}
-	if err := gatherChecks(base, checks); err != nil {
+	if err := checks.gather(base); err != nil {
 		return errors.WithStack(err)
 	}
 
-	sql := toCreateSQL(table, checks)
+	foreignKeys := ForeignKeys{}
+	if err := foreignKeys.gather(base); err != nil {
+		return errors.WithStack(err)
+	}
+
+	sql := toCreateSQL(table, checks, foreignKeys)
 	if _, err := dbmap.Exec(sql); err != nil {
 		return errors.WithStack(err)
 	}

@@ -22,11 +22,12 @@ var _ repository.TaskRepository = &TaskRepository{}
 
 // TaskSummary :
 type TaskSummary struct {
-	TaskID     int        `json:"id" db:"id"`
-	TaskName   string     `json:"name" db:"name"`
+	TaskID   int    `json:"id" db:"id"`
+	TaskName string `json:"name" db:"name"`
+	TaskPeriod
+
 	LastDoneID *int       `json:"done_id" db:"done_id"`
 	LastDoneAt *time.Time `json:"at" db:"at"`
-	TaskPeriod
 }
 
 // List :
@@ -77,9 +78,36 @@ func (repo *TaskRepository) Create(task model.Task) error {
 	return nil
 }
 
+func (repo *TaskRepository) doneList(taskID int) ([]DoneTask, error) {
+	dones := []DoneTask{}
+	if _, err := repo.Db.Select(&dones, `
+	SELECT *
+	FROM done_tasks done
+	WHERE done.task_id = ?
+	`, taskID); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return dones, nil
+}
+
 // Delete :
-func (repo *TaskRepository) Delete(task model.Task) error {
-	if _, err := repo.Db.Delete(task); err != nil {
+func (repo *TaskRepository) Delete(transaction repository.Transaction, task model.Task) error {
+	dones, err := repo.doneList(task.ID())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	ds := make([]interface{}, len(dones))
+	for i, d := range dones {
+		d := d
+		ds[i] = &d
+	}
+
+	trans := transaction.(*gorp.Transaction)
+	if _, err := trans.Delete(ds...); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if _, err := trans.Delete(task); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -143,7 +171,7 @@ func (repo *TaskRepository) From(id int, reader io.Reader) (model.Task, error) {
 
 // Task :
 type Task struct {
-	TaskID   int    `json:"id" db:"id"`
+	TaskID   int    `json:"id" db:"id, primarykey, autoincrement"`
 	TaskName string `json:"name" db:"name" check:"notEmpty"`
 	TaskPeriod
 
@@ -195,8 +223,8 @@ func (period TaskPeriod) Unit() model.PeriodUnit {
 
 // DoneTask :
 type DoneTask struct {
-	DoneTaskID int       `json:"id" db:"id"`
-	TaskID     int       `json:"taskId" db:"task_id"`
+	DoneTaskID int       `json:"id" db:"id, primarykey, autoincrement"`
+	TaskID     int       `json:"taskId" db:"task_id" foreign:"tasks(id)"`
 	TaskName   string    `json:"name" db:"name" check:"notEmpty"`
 	At         time.Time `json:"at" db:"at"`
 }

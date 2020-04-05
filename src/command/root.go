@@ -21,9 +21,10 @@ type RootCommand struct {
 func (root *RootCommand) TaskCmd(bufnr nvim.Buffer) *taskcmd.Command {
 	client := root.BufferClientFactory.Get(bufnr)
 	return &taskcmd.Command{
-		Renderer:       root.Renderer.Buffer(client),
-		Buffer:         client,
-		Redirector:     root.Redirector,
-		TaskRepository: root.TaskRepository,
+		Renderer:           root.Renderer.Buffer(client),
+		Buffer:             client,
+		Redirector:         root.Redirector,
+		TaskRepository:     root.TaskRepository,
+		TransactionFactory: root.TransactionFactory,
 	}
 }
