@@ -15,15 +15,23 @@ type ForeignKey struct {
 	ColumnName string
 }
 
-func (key ForeignKey) toSQLPart() string {
-	return fmt.Sprintf(", FOREIGN KEY(%s) REFERENCES %s", key.ColumnName, key.References)
+func (key ForeignKey) String() string {
+	return fmt.Sprintf("FOREIGN KEY(%s) REFERENCES %s", key.ColumnName, key.References)
 }
 
 // ForeignKeys :
 type ForeignKeys []ForeignKey
 
-func (keys *ForeignKeys) gather(val interface{}) error {
-	v := reflect.TypeOf(val)
+func (keys ForeignKeys) String() string {
+	parts := []string{}
+	for _, key := range keys {
+		parts = append(parts, ", "+key.String())
+	}
+	return strings.Join(parts, "")
+}
+
+func (keys *ForeignKeys) gather(base interface{}) error {
+	v := reflect.TypeOf(base)
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		if unicode.IsLower((rune(field.Name[0]))) {
@@ -43,17 +51,15 @@ func (keys *ForeignKeys) gather(val interface{}) error {
 			continue
 		}
 
-		dbTag, ok := field.Tag.Lookup("db")
+		name, ok := columnName(field)
 		if !ok {
 			continue
 		}
-		columnName := strings.Split(dbTag, ",")[0]
 
-		key := ForeignKey{
+		*keys = append(*keys, ForeignKey{
 			References: foreignTag,
-			ColumnName: columnName,
-		}
-		*keys = append(*keys, key)
+			ColumnName: name,
+		})
 	}
 	return nil
 }
