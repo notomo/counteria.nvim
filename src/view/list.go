@@ -27,8 +27,9 @@ func toLines(tasks []model.Task) ([][]byte, error) {
 		if doneAt != nil {
 			at = doneAt.Format("2006-01-02 15:04:05")
 		}
+		limit := task.LimitAt().Format("2006-01-02 15:04:05")
 
-		line := fmt.Sprintf("%s\t%s\tonce per %d %s\n", task.Name(), at, period.Number(), period.Unit())
+		line := fmt.Sprintf("%s\t%s\tonce per %d %s\t%s\n", task.Name(), at, period.Number(), period.Unit(), limit)
 		w.Write([]byte(line))
 	}
 	if err := w.Flush(); err != nil {

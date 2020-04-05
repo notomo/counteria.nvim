@@ -101,7 +101,7 @@ func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
 	case route.MethodRead:
 		switch path {
 		case route.TasksNew.Path:
-			return router.Root.TaskCmd(bufnr).CreateForm()
+			return router.Root.TaskCmd(bufnr).CreateForm(time.Now())
 		case route.TasksOne.Path:
 			return router.Root.TaskCmd(bufnr).ShowOne(params.TaskID())
 		case route.TasksList.Path:

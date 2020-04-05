@@ -8,4 +8,5 @@ type Task interface {
 	Name() string
 	Period() Period
 	DoneAt() *time.Time
+	LimitAt() time.Time
 }

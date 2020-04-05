@@ -22,8 +22,9 @@ var _ repository.TaskRepository = &TaskRepository{}
 
 // TaskSummary :
 type TaskSummary struct {
-	TaskID   int    `json:"id" db:"id"`
-	TaskName string `json:"name" db:"name"`
+	TaskID   int       `json:"id" db:"id"`
+	TaskName string    `json:"name" db:"name"`
+	StartAt  time.Time `json:"startAt" db:"start_at"`
 	TaskPeriod
 
 	LastDoneID *int       `json:"done_id" db:"done_id"`
@@ -55,6 +56,7 @@ func (repo *TaskRepository) List() ([]model.Task, error) {
 		task := &Task{
 			TaskID:     t.TaskID,
 			TaskName:   t.TaskName,
+			StartAt:    t.StartAt,
 			TaskPeriod: t.TaskPeriod,
 		}
 		if t.LastDoneID != nil {
@@ -148,9 +150,10 @@ func (repo *TaskRepository) One(id int) (model.Task, error) {
 }
 
 // Temporary :
-func (repo *TaskRepository) Temporary() model.Task {
+func (repo *TaskRepository) Temporary(now time.Time) model.Task {
 	return &Task{
 		TaskName: "name",
+		StartAt:  now,
 		TaskPeriod: TaskPeriod{
 			PeriodNumber: 1,
 			PeriodUnit:   model.PeriodUnitDay,
@@ -171,8 +174,9 @@ func (repo *TaskRepository) From(id int, reader io.Reader) (model.Task, error) {
 
 // Task :
 type Task struct {
-	TaskID   int    `json:"id" db:"id, primarykey, autoincrement"`
-	TaskName string `json:"name" db:"name" check:"notEmpty"`
+	TaskID   int       `json:"id" db:"id, primarykey, autoincrement"`
+	TaskName string    `json:"name" db:"name" check:"notEmpty"`
+	StartAt  time.Time `json:"startAt" db:"start_at"`
 	TaskPeriod
 
 	LastDone *DoneTask `json:"-" db:"-"`
@@ -203,6 +207,14 @@ func (task *Task) DoneAt() *time.Time {
 	return &task.LastDone.At
 }
 
+// LimitAt :
+func (task *Task) LimitAt() time.Time {
+	if task.LastDone == nil {
+		return task.Period().FromTime(task.StartAt)
+	}
+	return task.Period().FromTime(task.LastDone.At)
+}
+
 var _ model.Period = &TaskPeriod{}
 
 // TaskPeriod :
@@ -219,6 +231,13 @@ func (period TaskPeriod) Number() int {
 // Unit :
 func (period TaskPeriod) Unit() model.PeriodUnit {
 	return period.PeriodUnit
+}
+
+// FromTime : return from + period
+func (period TaskPeriod) FromTime(from time.Time) time.Time {
+	year, month, day := period.PeriodUnit.Numbers()
+	number := period.Number()
+	return from.AddDate(year*number, month*number, day*number)
 }
 
 // DoneTask :

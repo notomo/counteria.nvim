@@ -63,8 +63,8 @@ func (cmd *Command) ShowOne(taskID int) error {
 }
 
 // CreateForm :
-func (cmd *Command) CreateForm() error {
-	task := cmd.TaskRepository.Temporary()
+func (cmd *Command) CreateForm(now time.Time) error {
+	task := cmd.TaskRepository.Temporary(now)
 	return cmd.Renderer.OneNewTask(task)
 }
 

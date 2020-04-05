@@ -15,6 +15,6 @@ type TaskRepository interface {
 	Delete(Transaction, model.Task) error
 	Done(model.Task, time.Time) error
 	One(id int) (model.Task, error)
-	Temporary() model.Task
+	Temporary(now time.Time) model.Task
 	From(id int, reader io.Reader) (model.Task, error)
 }
