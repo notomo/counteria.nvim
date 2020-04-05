@@ -60,8 +60,6 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 
 	states := vimlib.LineStates{}
 	for i, task := range tasks {
-		id := strconv.Itoa(markIDs[i])
-
 		r := route.TasksOne
 		params := route.Params{"taskId": strconv.Itoa(task.ID())}
 		path, err := r.BuildPath(params)
@@ -69,8 +67,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 			return errors.WithStack(err)
 		}
 
-		state := vimlib.LineState{Path: path}
-		states[id] = state
+		states.Add(markIDs[i], path)
 	}
 	if err := renderer.Buffer.SaveLineState(states); err != nil {
 		return errors.WithStack(err)

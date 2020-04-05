@@ -54,6 +54,12 @@ type LineState struct {
 // LineStates :
 type LineStates map[string]LineState
 
+// Add : to state
+func (states LineStates) Add(markID int, path string) {
+	id := strconv.Itoa(markID)
+	states[id] = LineState{Path: path}
+}
+
 const stateKeyName = "_counteria_state"
 
 // SaveLineState :
