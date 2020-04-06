@@ -20,13 +20,13 @@ type Command struct {
 }
 
 // List :
-func (cmd *Command) List() error {
+func (cmd *Command) List(now time.Time) error {
 	tasks, err := cmd.TaskRepository.List()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return cmd.Renderer.TaskList(tasks)
+	return cmd.Renderer.TaskList(tasks, now)
 }
 
 // Create :

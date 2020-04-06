@@ -9,4 +9,5 @@ type Task interface {
 	Period() Period
 	DoneAt() *time.Time
 	LimitAt() time.Time
+	PastDeadline(time.Time) bool
 }

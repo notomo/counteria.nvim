@@ -3,6 +3,7 @@ package view
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/WeiZhang555/tabwriter"
 	"github.com/notomo/counteria.nvim/src/domain/model"
@@ -11,14 +12,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-func toLines(tasks []model.Task) ([][]byte, error) {
+func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, error) {
 	var b bytes.Buffer
 	minwidth, tabwidth := 1, 1
 	padding := 4
 	noflag := uint(0)
 	w := tabwriter.NewWriter(&b, minwidth, tabwidth, padding, ' ', noflag)
 
-	for _, task := range tasks {
+	highlights := []vimlib.Highlight{}
+	for i, task := range tasks {
 		period := task.Period()
 
 		at := "---------- --:--:--"
@@ -28,20 +30,31 @@ func toLines(tasks []model.Task) ([][]byte, error) {
 		}
 		limit := task.LimitAt().Format("2006-01-02 15:04:05")
 
-		line := fmt.Sprintf("%s\t%s\tonce per %d %s\t%s\n", task.Name(), at, period.Number(), period.Unit(), limit)
+		status := " "
+		if task.PastDeadline(now) {
+			status = "!"
+			highlights = append(highlights, vimlib.Highlight{
+				Group:    "Todo",
+				Line:     i,
+				StartCol: 0,
+				EndCol:   1,
+			})
+		}
+
+		line := fmt.Sprintf("%s %s\t%s\tonce per %d %s\t%s\n", status, task.Name(), at, period.Number(), period.Unit(), limit)
 		w.Write([]byte(line))
 	}
 	if err := w.Flush(); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
-	return lines[:len(lines)-1], nil
+	return lines[:len(lines)-1], highlights, nil
 }
 
 // TaskList :
-func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
-	lines, err := toLines(tasks)
+func (renderer *BufferRenderer) TaskList(tasks []model.Task, now time.Time) error {
+	lines, highlights, err := toLines(tasks, now)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -53,6 +66,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task) error {
 		renderer.Buffer.WithFileType("counteria-tasks"),
 		renderer.Buffer.WithModifiable(false),
 		renderer.Buffer.WithExtmarks(markIDs),
+		renderer.Buffer.WithHighlights(highlights),
 	); err != nil {
 		return errors.WithStack(err)
 	}

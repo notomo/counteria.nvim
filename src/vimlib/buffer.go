@@ -172,3 +172,21 @@ func (client *BufferClient) WithExtmarks(results []int) func(*nvim.Batch) {
 		}
 	}
 }
+
+// Highlight : color and position
+type Highlight struct {
+	Group    string
+	Line     int
+	StartCol int
+	EndCol   int
+}
+
+// WithHighlights :
+func (client *BufferClient) WithHighlights(highlights []Highlight) func(*nvim.Batch) {
+	return func(batch *nvim.Batch) {
+		for _, h := range highlights {
+			var result int
+			batch.AddBufferHighlight(client.Bufnr, client.NsID, h.Group, h.Line, h.StartCol, h.EndCol, &result)
+		}
+	}
+}

@@ -215,6 +215,11 @@ func (task *Task) LimitAt() time.Time {
 	return task.Period().FromTime(task.LastDone.At)
 }
 
+// PastDeadline :
+func (task *Task) PastDeadline(now time.Time) bool {
+	return now.After(task.LimitAt())
+}
+
 var _ model.Period = &TaskPeriod{}
 
 // TaskPeriod :
