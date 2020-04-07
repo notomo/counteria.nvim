@@ -12,17 +12,17 @@ type Redirector struct {
 	Vim *nvim.Nvim
 }
 
-// Do : redirect by route
-func (re *Redirector) Do(r Route, params Params, method Method) error {
+// To : redirect by route
+func (re *Redirector) To(method Method, r Route, params Params) error {
 	path, err := r.BuildPath(params)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return re.DoByPath(path, method)
+	return re.ToPath(method, path)
 }
 
-// DoByPath :
-func (re *Redirector) DoByPath(path string, method Method) error {
+// ToPath : redirect by path
+func (re *Redirector) ToPath(method Method, path string) error {
 	if !method.Renderable() {
 		var unused interface{}
 		var buf nvim.Buffer
@@ -39,7 +39,7 @@ func (re *Redirector) DoByPath(path string, method Method) error {
 		return errors.WithStack(err)
 	}
 
-	var buf nvim.Buffer
+	buf := nvim.Buffer(bufnr)
 	exists := bufnr != -1
 	if !exists {
 		b, err := re.Vim.CreateBuffer(false, true)
@@ -47,6 +47,7 @@ func (re *Redirector) DoByPath(path string, method Method) error {
 			return errors.WithStack(err)
 		}
 		buf = b
+		bufnr = int(buf)
 		if err := re.Vim.SetBufferName(buf, path); err != nil {
 			return errors.WithStack(err)
 		}
@@ -72,20 +73,10 @@ func (re *Redirector) ToTasksOne(taskID int) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	return re.DoByPath(path, MethodRead)
+	return re.ToPath(MethodRead, path)
 }
 
 // ToTasksList :
 func (re *Redirector) ToTasksList() error {
-	return re.Do(TasksList, Params{}, MethodRead)
-}
-
-// ToPath :
-func (re *Redirector) ToPath(method Method, path string) error {
-	req, err := All.Match(method, path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return re.Do(req.Route, req.Params, req.Method)
+	return re.To(MethodRead, TasksList, Params{})
 }
