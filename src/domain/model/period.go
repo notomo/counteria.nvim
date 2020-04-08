@@ -3,10 +3,21 @@ package model
 import "time"
 
 // Period :
-type Period interface {
+type Period struct {
+	PeriodData
+}
+
+// PeriodData :
+type PeriodData interface {
 	Number() int
 	Unit() PeriodUnit
-	FromTime(time.Time) time.Time
+}
+
+// FromTime : return from + period
+func (period Period) FromTime(from time.Time) time.Time {
+	year, month, day := period.Unit().numbers()
+	number := period.Number()
+	return from.AddDate(year*number, month*number, day*number)
 }
 
 // PeriodUnit :
@@ -23,17 +34,20 @@ var (
 	PeriodUnitDay = PeriodUnit("day")
 )
 
-// Numbers : year, month, day
-func (unit PeriodUnit) Numbers() (int, int, int) {
+func (unit PeriodUnit) numbers() (year int, month int, day int) {
 	switch unit {
 	case PeriodUnitYear:
-		return 1, 0, 0
+		year = 1
+		return
 	case PeriodUnitMonth:
-		return 0, 1, 0
+		month = 1
+		return
 	case PeriodUnitWeek:
-		return 0, 0, 7
+		day = 7
+		return
 	case PeriodUnitDay:
-		return 0, 0, 1
+		day = 1
+		return
 	}
 	panic("unreachable: invalid period unit: " + unit)
 }

@@ -54,27 +54,27 @@ func (repo *TaskRepository) List() ([]model.Task, error) {
 	tasks := make([]model.Task, len(summaries))
 	for i, t := range summaries {
 		task := &Task{
-			TaskID:     t.TaskID,
-			TaskName:   t.TaskName,
-			StartAt:    t.StartAt,
-			TaskPeriod: t.TaskPeriod,
+			TaskID:      t.TaskID,
+			TaskName:    t.TaskName,
+			TaskStartAt: t.StartAt,
+			TaskPeriod:  t.TaskPeriod,
 		}
 		if t.LastDoneID != nil {
-			task.LastDone = &DoneTask{
+			task.LastDoneTask = &DoneTask{
 				DoneTaskID: *t.LastDoneID,
 				TaskID:     task.TaskID,
 				TaskName:   task.TaskName,
-				At:         *t.LastDoneAt,
+				DoneAt:     *t.LastDoneAt,
 			}
 		}
-		tasks[i] = task
+		tasks[i] = model.Task{TaskData: task}
 	}
 	return tasks, nil
 }
 
 // Create :
-func (repo *TaskRepository) Create(task model.Task) error {
-	if err := repo.Db.Insert(task); err != nil {
+func (repo *TaskRepository) Create(task *model.Task) error {
+	if err := repo.Db.Insert(task.TaskData); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -93,7 +93,7 @@ func (repo *TaskRepository) doneList(taskID int) ([]DoneTask, error) {
 }
 
 // Delete :
-func (repo *TaskRepository) Delete(transaction repository.Transaction, task model.Task) error {
+func (repo *TaskRepository) Delete(transaction repository.Transaction, task *model.Task) error {
 	dones, err := repo.doneList(task.ID())
 	if err != nil {
 		return errors.WithStack(err)
@@ -109,26 +109,26 @@ func (repo *TaskRepository) Delete(transaction repository.Transaction, task mode
 		return errors.WithStack(err)
 	}
 
-	if _, err := trans.Delete(task); err != nil {
+	if _, err := trans.Delete(task.TaskData); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 // Update :
-func (repo *TaskRepository) Update(task model.Task) error {
-	if _, err := repo.Db.Update(task); err != nil {
+func (repo *TaskRepository) Update(task *model.Task) error {
+	if _, err := repo.Db.Update(task.TaskData); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 // Done :
-func (repo *TaskRepository) Done(task model.Task, now time.Time) error {
+func (repo *TaskRepository) Done(task *model.Task, now time.Time) error {
 	done := DoneTask{
 		TaskID:   task.ID(),
 		TaskName: task.Name(),
-		At:       now,
+		DoneAt:   now,
 	}
 	if err := repo.Db.Insert(&done); err != nil {
 		return errors.WithStack(err)
@@ -137,7 +137,7 @@ func (repo *TaskRepository) Done(task model.Task, now time.Time) error {
 }
 
 // One :
-func (repo *TaskRepository) One(id int) (model.Task, error) {
+func (repo *TaskRepository) One(id int) (*model.Task, error) {
 	var task Task
 	err := repo.Db.SelectOne(&task, "SELECT * FROM tasks WHERE id=?", id)
 	if err != nil {
@@ -146,43 +146,43 @@ func (repo *TaskRepository) One(id int) (model.Task, error) {
 		}
 		return nil, errors.WithStack(err)
 	}
-	return &task, nil
+	return &model.Task{TaskData: &task}, nil
 }
 
 // Temporary :
-func (repo *TaskRepository) Temporary(now time.Time) model.Task {
-	return &Task{
-		TaskName: "name",
-		StartAt:  now,
+func (repo *TaskRepository) Temporary(now time.Time) *model.Task {
+	return &model.Task{TaskData: &Task{
+		TaskName:    "name",
+		TaskStartAt: now,
 		TaskPeriod: TaskPeriod{
 			PeriodNumber: 1,
 			PeriodUnit:   model.PeriodUnitDay,
 		},
-	}
+	}}
 }
 
 // From :
-func (repo *TaskRepository) From(id int, reader io.Reader) (model.Task, error) {
+func (repo *TaskRepository) From(id int, reader io.Reader) (*model.Task, error) {
 	task := &Task{}
 	decoder := json.NewDecoder(reader)
 	if err := decoder.Decode(task); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	task.TaskID = id
-	return task, nil
+	return &model.Task{TaskData: task}, nil
 }
 
 // Task :
 type Task struct {
-	TaskID   int       `json:"id" db:"id, primarykey, autoincrement"`
-	TaskName string    `json:"name" db:"name" check:"notEmpty"`
-	StartAt  time.Time `json:"startAt" db:"start_at"`
+	TaskID      int       `json:"id" db:"id, primarykey, autoincrement"`
+	TaskName    string    `json:"name" db:"name" check:"notEmpty"`
+	TaskStartAt time.Time `json:"startAt" db:"start_at"`
 	TaskPeriod
 
-	LastDone *DoneTask `json:"-" db:"-"`
+	LastDoneTask *DoneTask `json:"-" db:"-"`
 }
 
-var _ model.Task = &Task{}
+var _ model.TaskData = &Task{}
 
 // ID :
 func (task *Task) ID() int {
@@ -196,31 +196,25 @@ func (task *Task) Name() string {
 
 // Period :
 func (task *Task) Period() model.Period {
-	return task.TaskPeriod
+	return model.Period{PeriodData: task.TaskPeriod}
 }
 
-// DoneAt :
-func (task *Task) DoneAt() *time.Time {
-	if task.LastDone == nil {
+// StartAt :
+func (task *Task) StartAt() time.Time {
+	return task.TaskStartAt
+}
+
+// LastDone :
+func (task *Task) LastDone() *model.DoneTask {
+	if task.LastDoneTask == nil {
 		return nil
 	}
-	return &task.LastDone.At
-}
-
-// LimitAt :
-func (task *Task) LimitAt() time.Time {
-	if task.LastDone == nil {
-		return task.Period().FromTime(task.StartAt)
+	return &model.DoneTask{
+		DoneTaskData: task.LastDoneTask,
 	}
-	return task.Period().FromTime(task.LastDone.At)
 }
 
-// PastDeadline :
-func (task *Task) PastDeadline(now time.Time) bool {
-	return now.After(task.LimitAt())
-}
-
-var _ model.Period = &TaskPeriod{}
+var _ model.PeriodData = &TaskPeriod{}
 
 // TaskPeriod :
 type TaskPeriod struct {
@@ -238,17 +232,15 @@ func (period TaskPeriod) Unit() model.PeriodUnit {
 	return period.PeriodUnit
 }
 
-// FromTime : return from + period
-func (period TaskPeriod) FromTime(from time.Time) time.Time {
-	year, month, day := period.PeriodUnit.Numbers()
-	number := period.Number()
-	return from.AddDate(year*number, month*number, day*number)
-}
-
 // DoneTask :
 type DoneTask struct {
 	DoneTaskID int       `json:"id" db:"id, primarykey, autoincrement"`
 	TaskID     int       `json:"taskId" db:"task_id" foreign:"tasks(id)"`
 	TaskName   string    `json:"name" db:"name" check:"notEmpty"`
-	At         time.Time `json:"at" db:"at"`
+	DoneAt     time.Time `json:"at" db:"at"`
+}
+
+// At :
+func (done *DoneTask) At() time.Time {
+	return done.DoneAt
 }

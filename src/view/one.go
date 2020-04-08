@@ -9,11 +9,11 @@ import (
 )
 
 // OneNewTask :
-func (renderer *BufferRenderer) OneNewTask(task model.Task) error {
+func (renderer *BufferRenderer) OneNewTask(task *model.Task) error {
 	var b bytes.Buffer
 	encoder := json.NewEncoder(&b)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(task); err != nil {
+	if err := encoder.Encode(task.TaskData); err != nil {
 		return errors.WithStack(err)
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
@@ -30,11 +30,11 @@ func (renderer *BufferRenderer) OneNewTask(task model.Task) error {
 }
 
 // OneTask :
-func (renderer *BufferRenderer) OneTask(task model.Task) error {
+func (renderer *BufferRenderer) OneTask(task *model.Task) error {
 	var b bytes.Buffer
 	encoder := json.NewEncoder(&b)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(task); err != nil {
+	if err := encoder.Encode(task.TaskData); err != nil {
 		return errors.WithStack(err)
 	}
 	lines := bytes.Split(b.Bytes(), []byte("\n"))
