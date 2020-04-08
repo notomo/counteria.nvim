@@ -1,9 +1,8 @@
 package taskcmd
 
 import (
-	"time"
-
 	"github.com/notomo/counteria.nvim/src/domain/repository"
+	"github.com/notomo/counteria.nvim/src/lib"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
 	"github.com/notomo/counteria.nvim/src/vimlib"
@@ -12,20 +11,23 @@ import (
 
 // Command :
 type Command struct {
-	Renderer           *view.BufferRenderer
-	Buffer             *vimlib.BufferClient
-	Redirector         *route.Redirector
+	Renderer   *view.BufferRenderer
+	Buffer     *vimlib.BufferClient
+	Redirector *route.Redirector
+	Clock      lib.Clock
+
 	TaskRepository     repository.TaskRepository
 	TransactionFactory repository.TransactionFactory
 }
 
 // List :
-func (cmd *Command) List(now time.Time) error {
+func (cmd *Command) List() error {
 	tasks, err := cmd.TaskRepository.List()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
+	now := cmd.Clock.Now()
 	return cmd.Renderer.TaskList(tasks, now)
 }
 
@@ -63,7 +65,8 @@ func (cmd *Command) ShowOne(taskID int) error {
 }
 
 // CreateForm :
-func (cmd *Command) CreateForm(now time.Time) error {
+func (cmd *Command) CreateForm() error {
+	now := cmd.Clock.Now()
 	task := cmd.TaskRepository.Temporary(now)
 	return cmd.Renderer.OneNewTask(task)
 }
@@ -93,12 +96,13 @@ func (cmd *Command) Delete(taskID int) error {
 }
 
 // Done :
-func (cmd *Command) Done(taskID int, now time.Time) error {
+func (cmd *Command) Done(taskID int) error {
 	task, err := cmd.TaskRepository.One(taskID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
+	now := cmd.Clock.Now()
 	if err := cmd.TaskRepository.Done(task, now); err != nil {
 		return errors.WithStack(err)
 	}

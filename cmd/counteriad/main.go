@@ -11,6 +11,7 @@ import (
 	"github.com/notomo/counteria.nvim/cmd/counteriad/internal"
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/datastore/sqliteimpl"
+	"github.com/notomo/counteria.nvim/src/lib"
 	"github.com/notomo/counteria.nvim/src/router"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
@@ -55,6 +56,7 @@ func run() error {
 				Renderer:            &view.Renderer{Vim: vim},
 				BufferClientFactory: &vimlib.BufferClientFactory{Vim: vim},
 				Redirector:          &route.Redirector{Vim: vim},
+				Clock:               lib.NewClock(),
 				Dep:                 dep,
 			},
 		),
