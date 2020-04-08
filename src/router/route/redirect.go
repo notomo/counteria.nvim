@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/neovim/go-client/nvim"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 // Redirector :
 type Redirector struct {
-	Vim *nvim.Nvim
+	Vim                 *nvim.Nvim
+	BufferClientFactory *vimlib.BufferClientFactory
 }
 
 // To : redirect by route
@@ -53,6 +55,11 @@ func (re *Redirector) ToPath(method Method, path string) error {
 		}
 	}
 
+	cursor, err := re.BufferClientFactory.Current().SaveCursor()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	batch := re.Vim.NewBatch()
 	batch.Command(fmt.Sprintf("edit %s", path))
 	if err := batch.Execute(); err != nil {
@@ -61,6 +68,10 @@ func (re *Redirector) ToPath(method Method, path string) error {
 
 	var unused interface{}
 	if err := re.Vim.Call("counteria#request", unused, method, true, buf); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := cursor.Restore(); err != nil {
 		return errors.WithStack(err)
 	}
 
