@@ -26,6 +26,10 @@ func (m Method) Renderable() bool {
 	return m == MethodRead
 }
 
+func (m Method) String() string {
+	return string(m)
+}
+
 // Methods :
 type Methods []Method
 

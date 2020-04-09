@@ -24,6 +24,31 @@ func (factory *BufferClientFactory) Current() *BufferClient {
 	return factory.Get(0)
 }
 
+// GetOrCreate :
+// NOTE: avoid executing BufReadCmd
+func (factory *BufferClientFactory) GetOrCreate(path string) (*BufferClient, error) {
+	var bufnr int
+	pattern := fmt.Sprintf("^%s$", path)
+	if err := factory.Vim.Call("bufnr", &bufnr, pattern); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	buf := nvim.Buffer(bufnr)
+	exists := bufnr != -1
+	if !exists {
+		b, err := factory.Vim.CreateBuffer(false, true)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		buf = b
+		if err := factory.Vim.SetBufferName(buf, path); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	return factory.Get(buf), nil
+}
+
 // Get :
 func (factory *BufferClientFactory) Get(bufnr nvim.Buffer) *BufferClient {
 	factory.getNamespace.Do(func() {
@@ -208,4 +233,13 @@ func (client *BufferClient) WithHighlights(highlights []Highlight) func(*nvim.Ba
 			batch.AddBufferHighlight(client.Bufnr, client.NsID, h.Group, h.Line, h.StartCol, h.EndCol, &result)
 		}
 	}
+}
+
+// SyncRequest :
+func (client *BufferClient) SyncRequest(method, path string) error {
+	var unused interface{}
+	if err := client.Vim.Call("counteria#request", unused, method, true, path, client.Bufnr); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
