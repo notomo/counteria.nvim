@@ -21,10 +21,11 @@ function! counteria#job#new() abort
     endfunction
 
     function! job.call(sync, method, ...) abort
+        let args = [self.id, a:method] + a:000
         if a:sync
-            return call('rpcrequest', [self.id, a:method] + a:000)
+            return call('rpcrequest', args)
         endif
-        return call('rpcnotify', [self.id, a:method] + a:000)
+        return call('rpcnotify', args)
     endfunction
 
     function! job.wait() abort

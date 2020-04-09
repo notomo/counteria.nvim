@@ -22,6 +22,7 @@ func (renderer *BufferRenderer) OneNewTask(task *model.Task) error {
 		lines[:len(lines)-1],
 		renderer.Buffer.WithBufferType("acwrite"),
 		renderer.Buffer.WithModifiable(true),
+		renderer.Buffer.WithOpen(),
 	); err != nil {
 		return errors.WithStack(err)
 	}
@@ -43,6 +44,7 @@ func (renderer *BufferRenderer) OneTask(task *model.Task) error {
 		lines[:len(lines)-1],
 		renderer.Buffer.WithBufferType("acwrite"),
 		renderer.Buffer.WithModifiable(true),
+		renderer.Buffer.WithOpen(),
 	); err != nil {
 		return errors.WithStack(err)
 	}

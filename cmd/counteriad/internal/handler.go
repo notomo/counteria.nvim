@@ -29,16 +29,9 @@ func (handler *Handler) Do(args []string) error {
 }
 
 // Exec : entry point for "exec"
-func (handler *Handler) Exec(method route.Method, buf nvim.Buffer) error {
-	if err := handler.Router.Exec(method, buf); err != nil {
-		return handler.Router.Error(err)
-	}
-	return nil
-}
-
-// ExecPath : entry point for "execPath"
-func (handler *Handler) ExecPath(method route.Method, path string, buf nvim.Buffer) error {
-	if err := handler.Router.ExecPath(method, path, buf); err != nil {
+func (handler *Handler) Exec(method route.Method, path string, bufnr int) error {
+	buf := nvim.Buffer(bufnr)
+	if err := handler.Router.Exec(method, path, buf); err != nil {
 		return handler.Router.Error(err)
 	}
 	return nil

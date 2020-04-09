@@ -65,7 +65,6 @@ func run() error {
 
 	vim.RegisterHandler("do", handler.Do)
 	vim.RegisterHandler("exec", handler.Exec)
-	vim.RegisterHandler("execPath", handler.ExecPath)
 
 	// for testing
 	vim.RegisterHandler("startWaiting", handler.StartWaiting)

@@ -54,38 +54,27 @@ func (router *Router) Do(args []string) error {
 	return nil
 }
 
-// ExecPath :
-func (router *Router) ExecPath(method route.Method, path string, bufnr nvim.Buffer) error {
-	req, err := route.All.Match(method, path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if err := router.exec(req, bufnr); err != nil {
-		if errors.Cause(err) == domain.ErrNotFound {
-			return route.NewErrNotFound(path)
-		}
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
 // Exec :
-func (router *Router) Exec(method route.Method, bufnr nvim.Buffer) error {
-	path, err := router.Vim.BufferName(bufnr)
-	if err != nil {
-		return errors.WithStack(err)
+func (router *Router) Exec(method route.Method, path string, bufnr nvim.Buffer) error {
+	var bufferPath string
+	if path == "" {
+		p, err := router.Vim.BufferName(bufnr)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		bufferPath = p
+	} else {
+		bufferPath = path
 	}
 
-	req, err := route.All.Match(method, path)
+	req, err := route.All.Match(method, bufferPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	if err := router.exec(req, bufnr); err != nil {
 		if errors.Cause(err) == domain.ErrNotFound {
-			return route.NewErrNotFound(path)
+			return route.NewErrNotFound(bufferPath)
 		}
 		return errors.WithStack(err)
 	}

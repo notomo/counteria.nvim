@@ -27,6 +27,7 @@ function! s:suite.open_tasks_new()
     call s:assert.match_path('counteria://tasks/\d+')
 
     call s:helper.sync_execute('open', 'tasks')
+    call s:assert.match_path('counteria://tasks')
 
     let line = line('$')
     call s:helper.sync_execute('do', 'delete')

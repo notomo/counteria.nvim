@@ -83,5 +83,9 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task, now time.Time) erro
 		return errors.WithStack(err)
 	}
 
+	if err := renderer.Buffer.Open(); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }

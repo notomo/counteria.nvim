@@ -2,6 +2,7 @@ package vimlib
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strconv"
 	"sync"
@@ -61,6 +62,16 @@ func (states LineStates) Add(markID int, path string) {
 }
 
 const stateKeyName = "_counteria_state"
+
+// Open :
+func (client *BufferClient) Open() error {
+	batch := client.Vim.NewBatch()
+	client.WithOpen()(batch)
+	if err := batch.Execute(); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
 
 // SaveLineState :
 func (client *BufferClient) SaveLineState(states LineStates) error {
@@ -160,6 +171,14 @@ func (client *BufferClient) WithFileType(typ string) func(*nvim.Batch) {
 func (client *BufferClient) WithModifiable(modifiable bool) func(*nvim.Batch) {
 	return func(batch *nvim.Batch) {
 		batch.SetBufferOption(client.Bufnr, "modifiable", modifiable)
+	}
+}
+
+// WithOpen :
+func (client *BufferClient) WithOpen() func(*nvim.Batch) {
+	cmd := fmt.Sprintf("buffer %d", client.Bufnr)
+	return func(batch *nvim.Batch) {
+		batch.Command(cmd)
 	}
 }
 

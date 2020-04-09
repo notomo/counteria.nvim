@@ -28,7 +28,7 @@ func (re *Redirector) ToPath(method Method, path string) error {
 	if !method.Renderable() {
 		var unused interface{}
 		var buf nvim.Buffer
-		if err := re.Vim.Call("counteria#request_path", unused, method, true, path, buf); err != nil {
+		if err := re.Vim.Call("counteria#request", unused, method, true, path, buf); err != nil {
 			return errors.WithStack(err)
 		}
 		return nil
@@ -37,7 +37,8 @@ func (re *Redirector) ToPath(method Method, path string) error {
 	// NOTE: avoid executing BufReadCmd
 
 	var bufnr int
-	if err := re.Vim.Call("bufnr", &bufnr, path); err != nil {
+	pattern := fmt.Sprintf("^%s$", path)
+	if err := re.Vim.Call("bufnr", &bufnr, pattern); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -60,14 +61,8 @@ func (re *Redirector) ToPath(method Method, path string) error {
 		return errors.WithStack(err)
 	}
 
-	batch := re.Vim.NewBatch()
-	batch.Command(fmt.Sprintf("edit %s", path))
-	if err := batch.Execute(); err != nil {
-		return errors.WithStack(err)
-	}
-
 	var unused interface{}
-	if err := re.Vim.Call("counteria#request", unused, method, true, buf); err != nil {
+	if err := re.Vim.Call("counteria#request", unused, method, true, path, buf); err != nil {
 		return errors.WithStack(err)
 	}
 
