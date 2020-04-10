@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // Task :
 type Task struct {
@@ -16,7 +18,7 @@ type TaskData interface {
 	LastDone() *DoneTask
 }
 
-// DoneAt :
+// DoneAt : the time the task was done
 func (task *Task) DoneAt() *time.Time {
 	lastDone := task.LastDone()
 	if lastDone == nil {
@@ -38,6 +40,29 @@ func (task *Task) LimitAt() time.Time {
 // PastDeadline :
 func (task *Task) PastDeadline(now time.Time) bool {
 	return now.After(task.LimitAt())
+}
+
+// RemainingTime : how much time until task deadline
+func (task *Task) RemainingTime(now time.Time) RemainingTime {
+	duration := task.LimitAt().Sub(now)
+
+	h := int(duration.Hours())
+	days := h / 24
+	hours := h % 24
+	minutes := int(duration.Minutes()) % 60
+
+	return RemainingTime{
+		Days:    days,
+		Hours:   hours,
+		Minutes: minutes,
+	}
+}
+
+// RemainingTime :
+type RemainingTime struct {
+	Days    int
+	Hours   int
+	Minutes int
 }
 
 // DoneTask :

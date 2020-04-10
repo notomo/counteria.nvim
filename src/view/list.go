@@ -28,7 +28,8 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 		if doneAt != nil {
 			at = doneAt.Format("2006-01-02 15:04:05")
 		}
-		limit := task.LimitAt().Format("2006-01-02 15:04:05")
+		remainingTime := task.RemainingTime(now)
+		remaining := fmt.Sprintf("%d days %d hours %d minutes", remainingTime.Days, remainingTime.Hours, remainingTime.Minutes)
 
 		status := " "
 		if task.PastDeadline(now) {
@@ -41,7 +42,7 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 			})
 		}
 
-		line := fmt.Sprintf("%s %s\t%s\tonce per %d %s\t%s\n", status, task.Name(), at, period.Number(), period.Unit(), limit)
+		line := fmt.Sprintf("%s %s\t%s\tonce per %d %s\tremains %s\n", status, task.Name(), at, period.Number(), period.Unit(), remaining)
 		w.Write([]byte(line))
 	}
 	if err := w.Flush(); err != nil {
