@@ -1,33 +1,23 @@
 package view
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
-	"github.com/WeiZhang555/tabwriter"
 	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/view/component"
 	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
 
 func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, error) {
-	var b bytes.Buffer
-	minwidth, tabwidth := 1, 1
-	padding := 2
-	noflag := uint(0)
-	w := tabwriter.NewWriter(&b, minwidth, tabwidth, padding, ' ', noflag)
-	w.Write([]byte("\tName\tDone\tRule\tRemains\n"))
-
-	highlights := []vimlib.Highlight{
-		{
-			Group:    "TabLineSel",
-			Line:     0,
-			StartCol: 0,
-			EndCol:   -1,
-		},
+	table, err := component.NewTable("", "Name", "Done", "Rule", "Remains")
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
 	}
+
+	highlights := []vimlib.Highlight{}
 	for i, task := range tasks {
 		period := task.Period()
 
@@ -50,15 +40,17 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 			})
 		}
 
-		line := fmt.Sprintf("%s\t%s\t%s\tonce per %d %s\t%s\n", status, task.Name(), at, period.Number(), period.Unit(), remaining)
-		w.Write([]byte(line))
-	}
-	if err := w.Flush(); err != nil {
-		return nil, nil, errors.WithStack(err)
+		rule := fmt.Sprintf("once per %d %s", period.Number(), period.Unit())
+		if err := table.AddLine(status, task.Name(), at, rule, remaining); err != nil {
+			return nil, nil, errors.WithStack(err)
+		}
 	}
 
-	lines := bytes.Split(b.Bytes(), []byte("\n"))
-	return lines[:len(lines)-1], highlights, nil
+	lines, err := table.Lines()
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
+	return lines, highlights, nil
 }
 
 // TaskList :

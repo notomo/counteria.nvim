@@ -52,6 +52,10 @@ func (unit PeriodUnit) numbers() (year int, month int, day int) {
 	panic("unreachable: invalid period unit: " + unit)
 }
 
+func (unit PeriodUnit) String() string {
+	return string(unit)
+}
+
 // PeriodUnits :
 func PeriodUnits() []PeriodUnit {
 	return []PeriodUnit{
