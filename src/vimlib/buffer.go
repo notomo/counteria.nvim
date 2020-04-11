@@ -89,13 +89,25 @@ func (states LineStates) Add(markID int, path string) {
 const stateKeyName = "_counteria_state"
 
 // Open :
-func (client *BufferClient) Open() error {
+func (client *BufferClient) Open(opts ...func(*nvim.Batch)) error {
 	batch := client.Vim.NewBatch()
 	client.WithOpen()(batch)
+	for _, opt := range opts {
+		opt(batch)
+	}
+
 	if err := batch.Execute(); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+// WithWindowOption :
+// NOTICE: this optin is valid only after window opened
+func (client *BufferClient) WithWindowOption(name string, value interface{}) func(*nvim.Batch) {
+	return func(batch *nvim.Batch) {
+		batch.SetWindowOption(0, name, value)
+	}
 }
 
 // SaveLineState :
