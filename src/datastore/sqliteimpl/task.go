@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/go-gorp/gorp"
@@ -32,9 +33,8 @@ type TaskSummary struct {
 }
 
 // List :
-func (repo *TaskRepository) List() ([]model.Task, error) {
-	summaries := []TaskSummary{}
-	if _, err := repo.Db.Select(&summaries, `
+func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, error) {
+	sql := `
 	SELECT
 		t.*
 		,done.id AS done_id
@@ -47,7 +47,9 @@ func (repo *TaskRepository) List() ([]model.Task, error) {
 			WHERE t.id = d.task_id
 			AND done.at < d.at
 		)
-	`); err != nil {
+	` + convertListOption(option)
+	summaries := []TaskSummary{}
+	if _, err := repo.Db.Select(&summaries, sql); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -69,6 +71,13 @@ func (repo *TaskRepository) List() ([]model.Task, error) {
 		}
 		tasks[i] = model.Task{TaskData: task}
 	}
+
+	if option.Sort.By == repository.SortByTaskRemains {
+		sort.Slice(tasks, func(i, j int) bool {
+			return tasks[i].LimitAt().Unix() < tasks[j].LimitAt().Unix()
+		})
+	}
+
 	return tasks, nil
 }
 

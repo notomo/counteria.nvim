@@ -9,7 +9,7 @@ import (
 
 // TaskRepository :
 type TaskRepository interface {
-	List() ([]model.Task, error)
+	List(ListOption) ([]model.Task, error)
 	Create(*model.Task) error
 	Update(*model.Task) error
 	Delete(Transaction, *model.Task) error

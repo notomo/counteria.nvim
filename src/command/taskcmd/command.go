@@ -22,7 +22,16 @@ type Command struct {
 
 // List :
 func (cmd *Command) List() error {
-	tasks, err := cmd.TaskRepository.List()
+	option := repository.ListOption{
+		Sort: repository.Sort{
+			By:    repository.SortByTaskRemains,
+			Order: repository.SortOrderDesc,
+		},
+		Limit:  100,
+		Offset: 0,
+	}
+
+	tasks, err := cmd.TaskRepository.List(option)
 	if err != nil {
 		return errors.WithStack(err)
 	}
