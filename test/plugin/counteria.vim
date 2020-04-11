@@ -13,6 +13,7 @@ function! s:suite.do_tasks_new()
     call s:helper.sync_execute('open', 'tasks')
     call s:assert.match_path('counteria://tasks')
 
+    normal! j
     call s:helper.sync_execute('do', 'done')
 
     call s:helper.sync_execute('do')
@@ -30,6 +31,7 @@ function! s:suite.open_tasks_new()
     call s:assert.match_path('counteria://tasks')
 
     let line = line('$')
+    normal! j
     call s:helper.sync_execute('do', 'delete')
 
     call s:assert.match_path('counteria://tasks')

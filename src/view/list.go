@@ -15,11 +15,19 @@ import (
 func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, error) {
 	var b bytes.Buffer
 	minwidth, tabwidth := 1, 1
-	padding := 4
+	padding := 2
 	noflag := uint(0)
 	w := tabwriter.NewWriter(&b, minwidth, tabwidth, padding, ' ', noflag)
+	w.Write([]byte("\tName\tDone\tRule\tRemains\n"))
 
-	highlights := []vimlib.Highlight{}
+	highlights := []vimlib.Highlight{
+		{
+			Group:    "TabLineSel",
+			Line:     0,
+			StartCol: 0,
+			EndCol:   -1,
+		},
+	}
 	for i, task := range tasks {
 		period := task.Period()
 
@@ -36,13 +44,13 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 			status = "!"
 			highlights = append(highlights, vimlib.Highlight{
 				Group:    "Todo",
-				Line:     i,
+				Line:     i + 1,
 				StartCol: 0,
 				EndCol:   1,
 			})
 		}
 
-		line := fmt.Sprintf("%s %s\t%s\tonce per %d %s\tremains %s\n", status, task.Name(), at, period.Number(), period.Unit(), remaining)
+		line := fmt.Sprintf("%s\t%s\t%s\tonce per %d %s\t%s\n", status, task.Name(), at, period.Number(), period.Unit(), remaining)
 		w.Write([]byte(line))
 	}
 	if err := w.Flush(); err != nil {
@@ -66,7 +74,7 @@ func (renderer *BufferRenderer) TaskList(tasks []model.Task, now time.Time) erro
 		renderer.Buffer.WithBufferType("nofile"),
 		renderer.Buffer.WithFileType("counteria-tasks"),
 		renderer.Buffer.WithModifiable(false),
-		renderer.Buffer.WithExtmarks(markIDs),
+		renderer.Buffer.WithExtmarks(markIDs, 1),
 		renderer.Buffer.WithHighlights(highlights),
 	); err != nil {
 		return errors.WithStack(err)

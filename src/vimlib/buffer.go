@@ -208,11 +208,11 @@ func (client *BufferClient) WithOpen() func(*nvim.Batch) {
 }
 
 // WithExtmarks :
-func (client *BufferClient) WithExtmarks(results []int) func(*nvim.Batch) {
+func (client *BufferClient) WithExtmarks(results []int, startLine int) func(*nvim.Batch) {
 	noneOpts := map[string]interface{}{}
 	return func(batch *nvim.Batch) {
 		for i := range results {
-			batch.SetBufferExtmark(client.Bufnr, client.NsID, 0, i, 0, noneOpts, &results[i])
+			batch.SetBufferExtmark(client.Bufnr, client.NsID, 0, i+startLine, 0, noneOpts, &results[i])
 		}
 	}
 }
