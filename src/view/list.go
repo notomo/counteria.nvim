@@ -46,11 +46,13 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 		}
 	}
 
-	lines, err := table.Lines()
+	lines, highs, err := table.Lines(
+		table.WithColumnHighlightGroup("TabLineSel"),
+	)
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}
-	return lines, highlights, nil
+	return lines, append(highs, highlights...), nil
 }
 
 // TaskList :
