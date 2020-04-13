@@ -13,9 +13,9 @@ type Task struct {
 type TaskData interface {
 	ID() int
 	Name() string
-	Period() Period
 	StartAt() time.Time
 	LastDone() *DoneTask
+	Rule() TaskRule
 }
 
 // DoneAt : the time the task was done
@@ -28,19 +28,39 @@ func (task *Task) DoneAt() *time.Time {
 	return &at
 }
 
-// LimitAt :
-func (task *Task) LimitAt() time.Time {
-	lastDone := task.LastDone()
-	if lastDone == nil {
-		return task.Period().FromTime(task.StartAt())
+// Deadline :
+func (task *Task) Deadline() Deadline {
+	return Deadline{
+		Rule:     task.Rule(),
+		StartAt:  task.StartAt(),
+		LastDone: task.LastDone(),
 	}
-	return task.Period().FromTime(lastDone.At())
 }
+
+// Deadline :
+type Deadline struct {
+	Rule     TaskRule
+	StartAt  time.Time
+	LastDone *DoneTask
+}
+
+// Next :
+func (deadline Deadline) Next() *time.Time {
+	return deadline.Rule.NextTime(deadline.StartAt, deadline.LastDone)
+}
+
+// Latest :
+func (deadline Deadline) Latest() time.Time {
+	next := deadline.Next()
+	if next != nil {
+		return *next
+	}
+	return *deadline.Rule.LastTime(deadline.StartAt, deadline.LastDone)
 }
 
 // RemainingTime : how much time until task deadline
-func (task *Task) RemainingTime(now time.Time) RemainingTime {
-	duration := task.LimitAt().Sub(now)
+func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
+	duration := deadline.Latest().Sub(now)
 
 	h := int(duration.Hours())
 	days := h / 24

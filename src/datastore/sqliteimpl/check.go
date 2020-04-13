@@ -76,9 +76,26 @@ var checkFuncs = map[string]func(string) string{
 	"natural": func(column string) string {
 		return fmt.Sprintf(`%s > 0`, column)
 	},
+	"weekday": func(column string) string {
+		enums := []string{}
+		for _, e := range model.AllWeekdays() {
+			enums = append(enums, fmt.Sprintf(`%d`, e))
+		}
+		return fmt.Sprintf(`%s IN (%s)`, column, strings.Join(enums, ", "))
+	},
+	"day": func(column string) string {
+		return fmt.Sprintf(`1 <= %s AND %s <= 31`, column, column)
+	},
 	"periodUnit": func(column string) string {
 		enums := []string{}
 		for _, e := range model.PeriodUnits() {
+			enums = append(enums, fmt.Sprintf(`"%s"`, e))
+		}
+		return fmt.Sprintf(`%s IN (%s)`, column, strings.Join(enums, ", "))
+	},
+	"taskRuleType": func(column string) string {
+		enums := []string{}
+		for _, e := range model.TaskRuleTypes() {
 			enums = append(enums, fmt.Sprintf(`"%s"`, e))
 		}
 		return fmt.Sprintf(`%s IN (%s)`, column, strings.Join(enums, ", "))

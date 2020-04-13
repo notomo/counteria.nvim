@@ -42,18 +42,22 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	reader, err := cmd.Buffer.Reader()
+	task, err := cmd.Renderer.TaskFromForm()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	var taskID int
-	task, err := cmd.TaskRepository.From(taskID, reader)
+	transaction, err := cmd.TransactionFactory.Begin()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if err := cmd.TaskRepository.Create(task); err != nil {
+	if err := cmd.TaskRepository.Create(transaction, task); err != nil {
+		if err := transaction.Rollback(); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(err)
+	}
+	if err := transaction.Commit(); err != nil {
 		return errors.WithStack(err)
 	}
 

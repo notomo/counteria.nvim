@@ -65,3 +65,11 @@ func PeriodUnits() []PeriodUnit {
 		PeriodUnitDay,
 	}
 }
+
+// Periods :
+type Periods []Period
+
+// NextTime :
+func (periods Periods) NextTime(at time.Time) *time.Time {
+	return nil
+}
