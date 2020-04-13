@@ -30,7 +30,7 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 		remaining := fmt.Sprintf("%d days %d hours %d minutes", remainingTime.Days, remainingTime.Hours, remainingTime.Minutes)
 
 		status := " "
-		if task.PastDeadline(now) {
+		if !remainingTime.Exists() {
 			status = "!"
 			highlights = append(highlights, vimlib.Highlight{
 				Group:    "Todo",

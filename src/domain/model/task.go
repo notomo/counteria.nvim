@@ -36,10 +36,6 @@ func (task *Task) LimitAt() time.Time {
 	}
 	return task.Period().FromTime(lastDone.At())
 }
-
-// PastDeadline :
-func (task *Task) PastDeadline(now time.Time) bool {
-	return now.After(task.LimitAt())
 }
 
 // RemainingTime : how much time until task deadline
@@ -52,9 +48,10 @@ func (task *Task) RemainingTime(now time.Time) RemainingTime {
 	minutes := int(duration.Minutes()) % 60
 
 	return RemainingTime{
-		Days:    days,
-		Hours:   hours,
-		Minutes: minutes,
+		Days:     days,
+		Hours:    hours,
+		Minutes:  minutes,
+		duration: duration,
 	}
 }
 
@@ -63,6 +60,13 @@ type RemainingTime struct {
 	Days    int
 	Hours   int
 	Minutes int
+
+	duration time.Duration
+}
+
+// Exists :
+func (t RemainingTime) Exists() bool {
+	return t.duration > 0
 }
 
 // DoneTask :
