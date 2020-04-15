@@ -10,18 +10,24 @@ DB := $(HOME)/.local/share/counteria/default.db
 clear:
 	rm $(DB)
 
+ARG := .help
+db_exec:
+	sqlite3 $(DB) '.headers on' '.mode column' '$(ARG)'
+	@echo
+
+DB_EXEC := @$(MAKE) --no-print-directory db_exec ARG=
 show:
-	sqlite3 $(DB) .tables
-	@echo
-	sqlite3 $(DB) .schema
-	@echo
-	sqlite3 $(DB) 'select * from tasks;'
-	@echo
-	sqlite3 $(DB) 'select * from done_tasks;'
-	@echo
-	sqlite3 $(DB) 'select * from task_rule_lines;'
+	$(DB_EXEC).tables
+	$(DB_EXEC).schema
+	$(DB_EXEC)'PRAGMA table_info(tasks);'
+	$(DB_EXEC)'PRAGMA table_info(done_tasks);'
+	$(DB_EXEC)'PRAGMA table_info(task_rule_lines);'
+	$(DB_EXEC)'SELECT * FROM tasks;'
+	$(DB_EXEC)'SELECT * FROM done_tasks;'
+	$(DB_EXEC)'SELECT * FROM task_rule_lines;'
 
 .PHONY: test
 .PHONY: build
 .PHONY: clear
+.PHONY: db_exec
 .PHONY: show
