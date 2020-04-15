@@ -42,18 +42,23 @@ func (cmd *Command) List() error {
 
 // Create :
 func (cmd *Command) Create() error {
-	reader, err := cmd.Buffer.Reader()
+	var newTaskID int
+	task, err := cmd.Renderer.TaskFromForm(newTaskID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	var taskID int
-	task, err := cmd.TaskRepository.From(taskID, reader)
+	transaction, err := cmd.TransactionFactory.Begin()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if err := cmd.TaskRepository.Create(task); err != nil {
+	if err := cmd.TaskRepository.Create(transaction, task); err != nil {
+		if err := transaction.Rollback(); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(err)
+	}
+	if err := transaction.Commit(); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -121,17 +126,22 @@ func (cmd *Command) Done(taskID int) error {
 
 // Update :
 func (cmd *Command) Update(taskID int) error {
-	reader, err := cmd.Buffer.Reader()
+	task, err := cmd.Renderer.TaskFromForm(taskID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	task, err := cmd.TaskRepository.From(taskID, reader)
+	transaction, err := cmd.TransactionFactory.Begin()
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if err := cmd.TaskRepository.Update(task); err != nil {
+	if err := cmd.TaskRepository.Update(transaction, task); err != nil {
+		if err := transaction.Rollback(); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(err)
+	}
+	if err := transaction.Commit(); err != nil {
 		return errors.WithStack(err)
 	}
 

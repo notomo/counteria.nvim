@@ -18,6 +18,8 @@ show:
 	sqlite3 $(DB) 'select * from tasks;'
 	@echo
 	sqlite3 $(DB) 'select * from done_tasks;'
+	@echo
+	sqlite3 $(DB) 'select * from task_rule_lines;'
 
 .PHONY: test
 .PHONY: build

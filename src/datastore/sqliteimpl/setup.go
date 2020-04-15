@@ -25,10 +25,12 @@ func Setup() (*domain.Dep, error) {
 	}
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	dbmap.ExpandSliceArgs = true
 
 	tables := Tables{
 		{Base: Task{}, Name: "tasks"},
 		{Base: DoneTask{}, Name: "done_tasks"},
+		{Base: TaskRuleLine{}, Name: "task_rule_lines"},
 	}
 	if err := tables.Setup(dbmap); err != nil {
 		return nil, errors.WithStack(err)

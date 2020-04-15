@@ -19,14 +19,13 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 
 	highlights := []vimlib.Highlight{}
 	for i, task := range tasks {
-		period := task.Period()
-
 		at := "---------- --:--:--"
 		doneAt := task.DoneAt()
 		if doneAt != nil {
 			at = doneAt.Format("2006-01-02 15:04:05")
 		}
-		remainingTime := task.RemainingTime(now)
+		deadline := task.Deadline()
+		remainingTime := deadline.RemainingTime(now)
 		remaining := fmt.Sprintf("%d days %d hours %d minutes", remainingTime.Days, remainingTime.Hours, remainingTime.Minutes)
 
 		status := " "
@@ -40,7 +39,7 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 			})
 		}
 
-		rule := fmt.Sprintf("once per %d %s", period.Number(), period.Unit())
+		rule := task.Rule().String()
 		if err := table.AddLine(status, task.Name(), at, rule, remaining); err != nil {
 			return nil, nil, errors.WithStack(err)
 		}
