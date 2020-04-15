@@ -1,4 +1,4 @@
-package sqliteimpl
+package database
 
 import (
 	"reflect"
