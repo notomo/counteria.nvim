@@ -2,8 +2,6 @@ package sqliteimpl
 
 import (
 	"database/sql"
-	"encoding/json"
-	"io"
 	"sort"
 	"time"
 
@@ -23,13 +21,13 @@ var _ repository.TaskRepository = &TaskRepository{}
 
 // TaskSummary :
 type TaskSummary struct {
-	TaskID       int                `json:"id" db:"id"`
-	TaskName     string             `json:"name" db:"name"`
-	StartAt      time.Time          `json:"startAt" db:"start_at"`
-	TaskRuleType model.TaskRuleType `json:"ruleType" db:"rule_type" check:"taskRuleType"`
+	TaskID       int                `db:"id"`
+	TaskName     string             `db:"name"`
+	StartAt      time.Time          `db:"start_at"`
+	TaskRuleType model.TaskRuleType `db:"rule_type" check:"taskRuleType"`
 
-	LastDoneID *int       `json:"done_id" db:"done_id"`
-	LastDoneAt *time.Time `json:"at" db:"at"`
+	LastDoneID *int       `db:"done_id"`
+	LastDoneAt *time.Time `db:"at"`
 }
 
 // List :
@@ -343,26 +341,15 @@ func (repo *TaskRepository) Temporary(now time.Time) *model.Task {
 	}}
 }
 
-// From :
-func (repo *TaskRepository) From(id int, reader io.Reader) (*model.Task, error) {
-	task := &Task{}
-	decoder := json.NewDecoder(reader)
-	if err := decoder.Decode(task); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	task.TaskID = id
-	return &model.Task{TaskData: task}, nil
-}
-
 // Task :
 type Task struct {
-	TaskID       int                `json:"id" db:"id, primarykey, autoincrement"`
-	TaskName     string             `json:"name" db:"name, notnull" check:"notEmpty"`
-	TaskStartAt  time.Time          `json:"startAt" db:"start_at, notnull"`
-	TaskRuleType model.TaskRuleType `json:"ruleType" db:"rule_type, notnull" check:"taskRuleType"`
+	TaskID       int                `db:"id, primarykey, autoincrement"`
+	TaskName     string             `db:"name, notnull" check:"notEmpty"`
+	TaskStartAt  time.Time          `db:"start_at, notnull"`
+	TaskRuleType model.TaskRuleType `db:"rule_type, notnull" check:"taskRuleType"`
 
-	LastDoneTask *DoneTask `json:"-" db:"-"`
-	TaskRule     *TaskRule `json:"rule" db:"-"`
+	LastDoneTask *DoneTask `db:"-"`
+	TaskRule     *TaskRule `db:"-"`
 }
 
 var _ model.TaskData = &Task{}
@@ -399,10 +386,10 @@ func (task *Task) LastDone() *model.DoneTask {
 
 // DoneTask :
 type DoneTask struct {
-	DoneTaskID int       `json:"id" db:"id, primarykey, autoincrement"`
-	TaskID     int       `json:"taskId" db:"task_id, notnull" foreign:"tasks(id)"`
-	TaskName   string    `json:"name" db:"name, notnull" check:"notEmpty"`
-	DoneAt     time.Time `json:"at" db:"at, notnull"`
+	DoneTaskID int       `db:"id, primarykey, autoincrement"`
+	TaskID     int       `db:"task_id, notnull" foreign:"tasks(id)"`
+	TaskName   string    `db:"name, notnull" check:"notEmpty"`
+	DoneAt     time.Time `db:"at, notnull"`
 }
 
 // At :
@@ -479,13 +466,13 @@ func (rule *TaskRule) Periods() model.Periods {
 
 // TaskRuleLine :
 type TaskRuleLine struct {
-	ID       int             `json:"id" db:"id, primarykey, autoincrement"`
-	TaskID   int             `json:"taskId" db:"task_id, notnull" foreign:"tasks(id)"`
-	Weekday  *time.Weekday   `json:"weekday" db:"weekday" check:"weekday"`
-	Day      *model.Day      `json:"day" db:"day" check:"day"`
-	MonthDay *model.MonthDay `json:"monthDay" db:"month_day"`
-	Time     *time.Time      `json:"time" db:"time"`
-	Date     *model.Date     `json:"date" db:"date"`
+	ID       int             `db:"id, primarykey, autoincrement"`
+	TaskID   int             `db:"task_id, notnull" foreign:"tasks(id)"`
+	Weekday  *time.Weekday   `db:"weekday" check:"weekday"`
+	Day      *model.Day      `db:"day" check:"day"`
+	MonthDay *model.MonthDay `db:"month_day"`
+	Time     *time.Time      `db:"time"`
+	Date     *model.Date     `db:"date"`
 	TaskPeriod
 }
 
@@ -493,8 +480,8 @@ var _ model.PeriodData = &TaskPeriod{}
 
 // TaskPeriod :
 type TaskPeriod struct {
-	PeriodNumber *int              `json:"period_number" db:"period_number" check:"natural"`
-	PeriodUnit   *model.PeriodUnit `json:"period_unit" db:"period_unit" check:"periodUnit"`
+	PeriodNumber *int              `db:"period_number" check:"natural"`
+	PeriodUnit   *model.PeriodUnit `db:"period_unit" check:"periodUnit"`
 }
 
 // Number :
