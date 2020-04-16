@@ -82,7 +82,7 @@ func (cmd *Command) ShowOne(taskID int) error {
 func (cmd *Command) CreateForm() error {
 	now := cmd.Clock.Now()
 	task := cmd.TaskRepository.Temporary(now)
-	return cmd.Renderer.OneNewTask(task)
+	return cmd.Renderer.OneTask(task)
 }
 
 // Delete :
