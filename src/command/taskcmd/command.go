@@ -117,7 +117,17 @@ func (cmd *Command) Done(taskID int) error {
 	}
 
 	now := cmd.Clock.Now()
-	if err := cmd.TaskRepository.Done(task, now); err != nil {
+	transaction, err := cmd.TransactionFactory.Begin()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := cmd.TaskRepository.Done(transaction, task, now); err != nil {
+		if err := transaction.Rollback(); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(err)
+	}
+	if err := transaction.Commit(); err != nil {
 		return errors.WithStack(err)
 	}
 
