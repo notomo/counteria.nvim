@@ -16,8 +16,10 @@ func convertSort(sort repository.Sort) string {
 	switch sort.By {
 	case repository.SortByTaskDoneAt:
 		by = "done.at"
-	default:
+	case repository.SortByTaskRemains:
 		return ""
+	default:
+		panic("invalid sort by: " + sort.By)
 	}
 	return fmt.Sprintf("ORDER BY %s %s", by, sort.Order)
 }
