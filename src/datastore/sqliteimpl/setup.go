@@ -20,9 +20,9 @@ func Setup() (*domain.Dep, error) {
 
 	return &domain.Dep{
 		TaskRepository: &TaskRepository{
-			Db:        dbmap,
-			RuleLines: &TaskRuleLineRepository{Db: dbmap},
-			Dones:     &DoneTaskRepository{Db: dbmap},
+			Db:    dbmap,
+			Rules: &TaskRuleLineRepository{Db: dbmap},
+			Dones: &DoneTaskRepository{Db: dbmap},
 		},
 		TransactionFactory: &TransactionFactory{Db: dbmap},
 	}, nil

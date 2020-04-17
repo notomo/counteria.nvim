@@ -52,6 +52,29 @@ func (repo *TaskRuleLineRepository) Delete(transaction repository.Transaction, t
 	return nil
 }
 
+// Bind :
+func (repo *TaskRuleLineRepository) Bind(tasks ...*Task) error {
+	ids := make([]int, len(tasks))
+	taskMap := make(map[int]*Task)
+	for i, task := range tasks {
+		ids[i] = task.TaskID
+		taskMap[task.TaskID] = task
+	}
+
+	lines, err := repo.List(ids...)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, line := range lines {
+		task := taskMap[line.TaskID]
+		task.TaskRule = NewTaskRule(task.TaskRuleType)
+		task.TaskRule.addLine(line)
+	}
+
+	return nil
+}
+
 // List :
 func (repo *TaskRuleLineRepository) List(taskIDs ...int) ([]TaskRuleLine, error) {
 	lines := []TaskRuleLine{}
@@ -111,6 +134,36 @@ func (repo *TaskRuleLineRepository) toRuleLines(taskID int, rule *model.TaskRule
 }
 
 var _ model.TaskRuleData = &TaskRule{}
+
+// NewTaskRule :
+func NewTaskRule(typ model.TaskRuleType, opts ...func(*TaskRule)) *TaskRule {
+	rule := &TaskRule{
+		RuleType:      typ,
+		RuleWeekdays:  model.Weekdays{},
+		RuleDays:      model.Days{},
+		RuleMonthDays: model.MonthDays{},
+		RuleTimes:     model.Times{},
+		RuleDates:     model.Dates{},
+		RulePeriods:   model.Periods{},
+	}
+	for _, opt := range opts {
+		opt(rule)
+	}
+	return rule
+}
+
+// WithPeriod :
+func WithPeriod(number int, unit model.PeriodUnit) func(*TaskRule) {
+	return func(ob *TaskRule) {
+		period := model.Period{
+			PeriodData: TaskPeriod{
+				PeriodNumber: &number,
+				PeriodUnit:   &unit,
+			},
+		}
+		ob.RulePeriods = append(ob.RulePeriods, period)
+	}
+}
 
 // TaskRule :
 type TaskRule struct {

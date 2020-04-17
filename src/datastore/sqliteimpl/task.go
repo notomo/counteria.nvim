@@ -16,8 +16,8 @@ import (
 type TaskRepository struct {
 	Db *gorp.DbMap
 
-	RuleLines *TaskRuleLineRepository
-	Dones     *DoneTaskRepository
+	Rules *TaskRuleLineRepository
+	Dones *DoneTaskRepository
 }
 
 var _ repository.TaskRepository = &TaskRepository{}
@@ -55,23 +55,13 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 	}
 
 	tasks := make([]model.Task, len(summaries))
-	taskIDs := make([]int, len(summaries))
-	taskMap := make(map[int]*Task)
+	ts := make([]*Task, len(summaries))
 	for i, t := range summaries {
 		task := &Task{
 			TaskID:       t.TaskID,
 			TaskName:     t.TaskName,
 			TaskStartAt:  t.StartAt,
 			TaskRuleType: t.TaskRuleType,
-			TaskRule: &TaskRule{
-				RuleType:      t.TaskRuleType,
-				RulePeriods:   model.Periods{},
-				RuleTimes:     model.Times{},
-				RuleMonthDays: model.MonthDays{},
-				RuleWeekdays:  model.Weekdays{},
-				RuleDays:      model.Days{},
-				RuleDates:     model.Dates{},
-			},
 		}
 		if t.LastDoneID != nil {
 			task.LastDoneTask = &DoneTask{
@@ -82,17 +72,11 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 			}
 		}
 		tasks[i] = model.Task{TaskData: task}
-		taskIDs[i] = task.TaskID
-		taskMap[task.TaskID] = task
+		ts[i] = task
 	}
 
-	ruleLines, err := repo.RuleLines.List(taskIDs...)
-	if err != nil {
+	if err := repo.Rules.Bind(ts...); err != nil {
 		return nil, errors.WithStack(err)
-	}
-	for _, line := range ruleLines {
-		task := taskMap[line.TaskID]
-		task.TaskRule.addLine(line)
 	}
 
 	if option.Sort.By == repository.SortByTaskRemains {
@@ -119,7 +103,7 @@ func (repo *TaskRepository) Create(transaction repository.Transaction, task *mod
 	}
 	task.TaskData = t
 
-	if err := repo.RuleLines.Create(trans, t.TaskID, rule); err != nil {
+	if err := repo.Rules.Create(trans, t.TaskID, rule); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -129,12 +113,13 @@ func (repo *TaskRepository) Create(transaction repository.Transaction, task *mod
 // Delete :
 func (repo *TaskRepository) Delete(transaction repository.Transaction, task *model.Task) error {
 	trans := transaction.(*gorp.Transaction)
+	taskID := task.ID()
 
-	if err := repo.Dones.Delete(trans, task); err != nil {
+	if err := repo.Dones.Delete(trans, taskID); err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err := repo.RuleLines.Delete(trans, task.ID()); err != nil {
+	if err := repo.Rules.Delete(trans, taskID); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -161,7 +146,7 @@ func (repo *TaskRepository) Update(transaction repository.Transaction, task *mod
 	}
 	task.TaskData = t
 
-	if err := repo.RuleLines.Update(trans, task.ID(), rule); err != nil {
+	if err := repo.Rules.Update(trans, task.ID(), rule); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -178,8 +163,8 @@ func (repo *TaskRepository) Done(transaction repository.Transaction, task *model
 
 // One :
 func (repo *TaskRepository) One(id int) (*model.Task, error) {
-	var task Task
-	err := repo.Db.SelectOne(&task, "SELECT * FROM tasks WHERE id=?", id)
+	var t Task
+	err := repo.Db.SelectOne(&t, "SELECT * FROM tasks WHERE id=?", id)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, domain.ErrNotFound
@@ -187,51 +172,22 @@ func (repo *TaskRepository) One(id int) (*model.Task, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	ruleLines, err := repo.RuleLines.List(id)
-	if err != nil {
+	if err := repo.Rules.Bind(&t); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	task.TaskRule = &TaskRule{
-		RuleType:      task.TaskRuleType,
-		RulePeriods:   model.Periods{},
-		RuleTimes:     model.Times{},
-		RuleMonthDays: model.MonthDays{},
-		RuleWeekdays:  model.Weekdays{},
-		RuleDays:      model.Days{},
-		RuleDates:     model.Dates{},
-	}
-	for _, line := range ruleLines {
-		task.TaskRule.addLine(line)
-	}
-
-	return &model.Task{TaskData: &task}, nil
+	return &model.Task{TaskData: &t}, nil
 }
 
 // Temporary :
 func (repo *TaskRepository) Temporary(now time.Time) *model.Task {
-	number := 1
-	unit := model.PeriodUnitDay
+	typ := model.TaskRuleTypePeriodic
+	rule := NewTaskRule(typ, WithPeriod(1, model.PeriodUnitDay))
 	return &model.Task{TaskData: &Task{
 		TaskName:     "name",
 		TaskStartAt:  now,
-		TaskRuleType: model.TaskRuleTypePeriodic,
-		TaskRule: &TaskRule{
-			RuleType:      model.TaskRuleTypePeriodic,
-			RuleWeekdays:  model.Weekdays{},
-			RuleDays:      model.Days{},
-			RuleMonthDays: model.MonthDays{},
-			RuleTimes:     model.Times{},
-			RuleDates:     model.Dates{},
-			RulePeriods: model.Periods{
-				{
-					PeriodData: TaskPeriod{
-						PeriodNumber: &number,
-						PeriodUnit:   &unit,
-					},
-				},
-			},
-		},
+		TaskRuleType: typ,
+		TaskRule:     rule,
 	}}
 }
 

@@ -31,10 +31,10 @@ func (repo *DoneTaskRepository) Create(transaction repository.Transaction, task 
 }
 
 // Delete :
-func (repo *DoneTaskRepository) Delete(transaction repository.Transaction, task *model.Task) error {
+func (repo *DoneTaskRepository) Delete(transaction repository.Transaction, taskID int) error {
 	trans := transaction.(*gorp.Transaction)
 
-	dones, err := repo.List(task.ID())
+	dones, err := repo.List(taskID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
