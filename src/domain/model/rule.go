@@ -37,7 +37,7 @@ type TaskRuleData interface {
 	Dates() Dates
 	MonthDays() MonthDays
 	Days() Days
-	DateTimes() Times
+	DateTimes() DateTimes
 	Periods() Periods
 }
 
@@ -94,8 +94,8 @@ type Day int
 // Days :
 type Days []Day
 
-// Times :
-type Times []time.Time
+// DateTimes :
+type DateTimes []time.Time
 
 // TaskRuleType :
 type TaskRuleType string

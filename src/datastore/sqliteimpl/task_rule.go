@@ -142,7 +142,7 @@ func NewTaskRule(typ model.TaskRuleType, opts ...func(*TaskRule)) *TaskRule {
 		RuleWeekdays:  model.Weekdays{},
 		RuleDays:      model.Days{},
 		RuleMonthDays: model.MonthDays{},
-		RuleTimes:     model.Times{},
+		RuleDateTimes: model.DateTimes{},
 		RuleDates:     model.Dates{},
 		RulePeriods:   model.Periods{},
 	}
@@ -171,7 +171,7 @@ type TaskRule struct {
 	RuleWeekdays  model.Weekdays
 	RuleDays      model.Days
 	RuleMonthDays model.MonthDays
-	RuleTimes     model.Times
+	RuleDateTimes model.DateTimes
 	RuleDates     model.Dates
 	RulePeriods   model.Periods
 }
@@ -221,8 +221,8 @@ func (rule *TaskRule) Dates() model.Dates {
 }
 
 // DateTimes :
-func (rule *TaskRule) DateTimes() model.Times {
-	return rule.RuleTimes
+func (rule *TaskRule) DateTimes() model.DateTimes {
+	return rule.RuleDateTimes
 }
 
 // Periods :

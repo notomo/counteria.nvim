@@ -28,7 +28,7 @@ func NewTaskForm(task *model.Task) *TaskFormView {
 			RuleWeekdays:  rule.Weekdays(),
 			RuleDays:      rule.Days(),
 			RuleMonthDays: rule.MonthDays(),
-			RuleTimes:     rule.DateTimes(),
+			RuleDateTimes: rule.DateTimes(),
 			RuleDates:     rule.Dates(),
 			RulePeriods:   periods,
 		},
@@ -44,13 +44,13 @@ type PeriodView struct {
 }
 
 // Number :
-func (period PeriodView) Number() int {
-	return period.PeriodNumber
+func (view PeriodView) Number() int {
+	return view.PeriodNumber
 }
 
 // Unit :
-func (period PeriodView) Unit() model.PeriodUnit {
-	return period.PeriodUnit
+func (view PeriodView) Unit() model.PeriodUnit {
+	return view.PeriodUnit
 }
 
 // TaskFormView :
@@ -80,59 +80,59 @@ type TaskRuleView struct {
 	RuleWeekdays  model.Weekdays  `json:"weekdays"`
 	RuleDays      model.Days      `json:"days"`
 	RuleMonthDays model.MonthDays `json:"monthDays"`
-	RuleTimes     model.Times     `json:"times"`
+	RuleDateTimes model.DateTimes `json:"dateTimes"`
 	RuleDates     model.Dates     `json:"dates"`
 	RulePeriods   []PeriodView    `json:"periods"`
 }
 
 // Type :
-func (rule *TaskRuleView) Type() model.TaskRuleType {
+func (view *TaskRuleView) Type() model.TaskRuleType {
 	switch {
-	case len(rule.RuleWeekdays) != 0:
+	case len(view.RuleWeekdays) != 0:
 		return model.TaskRuleTypeInWeekdays
-	case len(rule.RuleDays) != 0:
+	case len(view.RuleDays) != 0:
 		return model.TaskRuleTypeInDaysEveryMonth
-	case len(rule.RuleMonthDays) != 0:
+	case len(view.RuleMonthDays) != 0:
 		return model.TaskRuleTypeInDaysEveryMonth
-	case len(rule.RuleTimes) != 0:
+	case len(view.RuleDateTimes) != 0:
 		return model.TaskRuleTypeByTimes
-	case len(rule.RuleDates) != 0:
+	case len(view.RuleDates) != 0:
 		return model.TaskRuleTypeInDates
-	case len(rule.RulePeriods) != 0:
+	case len(view.RulePeriods) != 0:
 		return model.TaskRuleTypePeriodic
 	}
 	panic("invalid rule")
 }
 
 // Weekdays :
-func (rule *TaskRuleView) Weekdays() model.Weekdays {
-	return rule.RuleWeekdays
+func (view *TaskRuleView) Weekdays() model.Weekdays {
+	return view.RuleWeekdays
 }
 
 // Days :
-func (rule *TaskRuleView) Days() model.Days {
-	return rule.RuleDays
+func (view *TaskRuleView) Days() model.Days {
+	return view.RuleDays
 }
 
 // MonthDays :
-func (rule *TaskRuleView) MonthDays() model.MonthDays {
-	return rule.RuleMonthDays
+func (view *TaskRuleView) MonthDays() model.MonthDays {
+	return view.RuleMonthDays
 }
 
 // Dates :
-func (rule *TaskRuleView) Dates() model.Dates {
-	return rule.RuleDates
+func (view *TaskRuleView) Dates() model.Dates {
+	return view.RuleDates
 }
 
 // DateTimes :
-func (rule *TaskRuleView) DateTimes() model.Times {
-	return rule.RuleTimes
+func (view *TaskRuleView) DateTimes() model.DateTimes {
+	return view.RuleDateTimes
 }
 
 // Periods :
-func (rule *TaskRuleView) Periods() model.Periods {
+func (view *TaskRuleView) Periods() model.Periods {
 	periods := model.Periods{}
-	for _, p := range rule.RulePeriods {
+	for _, p := range view.RulePeriods {
 		periods = append(periods, model.Period{
 			PeriodData: p,
 		})
