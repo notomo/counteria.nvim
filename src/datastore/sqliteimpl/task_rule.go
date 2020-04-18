@@ -15,10 +15,10 @@ type TaskRuleLineRepository struct {
 }
 
 // Create :
-func (repo *TaskRuleLineRepository) Create(transaction repository.Transaction, taskID int, rule *model.TaskRule) error {
+func (repo *TaskRuleLineRepository) Create(transaction repository.Transaction, task *Task) error {
 	trans := transaction.(*gorp.Transaction)
 
-	lines := repo.toRuleLines(taskID, rule)
+	lines := task.ruleLines()
 	ls := make([]interface{}, len(lines))
 	for i, l := range lines {
 		l := l
@@ -59,6 +59,7 @@ func (repo *TaskRuleLineRepository) Bind(tasks ...*Task) error {
 	for i, task := range tasks {
 		ids[i] = task.TaskID
 		taskMap[task.TaskID] = task
+		task.TaskRule = NewTaskRule(task.TaskRuleType)
 	}
 
 	lines, err := repo.List(ids...)
@@ -68,8 +69,7 @@ func (repo *TaskRuleLineRepository) Bind(tasks ...*Task) error {
 
 	for _, line := range lines {
 		task := taskMap[line.TaskID]
-		task.TaskRule = NewTaskRule(task.TaskRuleType)
-		task.TaskRule.addLine(line)
+		task.TaskRule.add(line)
 	}
 
 	return nil
@@ -93,44 +93,18 @@ func (repo *TaskRuleLineRepository) List(taskIDs ...int) ([]TaskRuleLine, error)
 }
 
 // Update : delete and insert
-func (repo *TaskRuleLineRepository) Update(transaction repository.Transaction, taskID int, rule *model.TaskRule) error {
+func (repo *TaskRuleLineRepository) Update(transaction repository.Transaction, task *Task) error {
 	trans := transaction.(*gorp.Transaction)
 
-	if err := repo.Delete(trans, taskID); err != nil {
+	if err := repo.Delete(trans, task.ID()); err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err := repo.Create(trans, taskID, rule); err != nil {
+	if err := repo.Create(trans, task); err != nil {
 		return errors.WithStack(err)
 	}
 
 	return nil
-}
-
-func (repo *TaskRuleLineRepository) toRuleLines(taskID int, rule *model.TaskRule) []TaskRuleLine {
-	lines := []TaskRuleLine{}
-	switch typ := rule.TaskRuleData.Type(); typ {
-	case model.TaskRuleTypePeriodic:
-		for _, p := range rule.Periods() {
-			number := p.Number()
-			unit := p.Unit()
-			line := TaskRuleLine{
-				TaskID: taskID,
-				TaskPeriod: TaskPeriod{
-					PeriodNumber: &number,
-					PeriodUnit:   &unit,
-				},
-			}
-			lines = append(lines, line)
-		}
-	case model.TaskRuleTypeByTimes:
-	case model.TaskRuleTypeInDaysEveryMonth:
-	case model.TaskRuleTypeInDates:
-	case model.TaskRuleTypeInWeekdays:
-	default:
-		panic("unreachable: invalid rule type: " + typ)
-	}
-	return lines
 }
 
 var _ model.TaskRuleData = &TaskRule{}
@@ -176,7 +150,7 @@ type TaskRule struct {
 	RulePeriods   model.Periods
 }
 
-func (rule *TaskRule) addLine(line TaskRuleLine) {
+func (rule *TaskRule) add(line TaskRuleLine) {
 	typ := rule.RuleType
 	switch typ {
 	case model.TaskRuleTypePeriodic:
@@ -258,4 +232,30 @@ func (period TaskPeriod) Number() int {
 // Unit :
 func (period TaskPeriod) Unit() model.PeriodUnit {
 	return *period.PeriodUnit
+}
+
+func (task *Task) ruleLines() []TaskRuleLine {
+	lines := []TaskRuleLine{}
+	switch typ := task.TaskRuleType; typ {
+	case model.TaskRuleTypePeriodic:
+		for _, p := range task.Rule().Periods() {
+			number := p.Number()
+			unit := p.Unit()
+			line := TaskRuleLine{
+				TaskID: task.ID(),
+				TaskPeriod: TaskPeriod{
+					PeriodNumber: &number,
+					PeriodUnit:   &unit,
+				},
+			}
+			lines = append(lines, line)
+		}
+	case model.TaskRuleTypeByTimes:
+	case model.TaskRuleTypeInDaysEveryMonth:
+	case model.TaskRuleTypeInDates:
+	case model.TaskRuleTypeInWeekdays:
+	default:
+		panic("unreachable: invalid rule type: " + typ)
+	}
+	return lines
 }

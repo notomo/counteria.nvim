@@ -49,6 +49,7 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 			AND done.at < d.at
 		)
 	` + convertListOption(option)
+
 	summaries := []TaskSummary{}
 	if _, err := repo.Db.Select(&summaries, sql); err != nil {
 		return nil, errors.WithStack(err)
@@ -92,21 +93,41 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 func (repo *TaskRepository) Create(transaction repository.Transaction, task *model.Task) error {
 	trans := transaction.(*gorp.Transaction)
 
-	rule := task.Rule()
-	t := &Task{
-		TaskName:     task.Name(),
-		TaskStartAt:  task.StartAt(),
-		TaskRuleType: rule.Type(),
-	}
+	t := readTask(task)
 	if err := trans.Insert(t); err != nil {
 		return errors.WithStack(err)
 	}
 	task.TaskData = t
 
-	if err := repo.Rules.Create(trans, t.TaskID, rule); err != nil {
+	if err := repo.Rules.Create(trans, t); err != nil {
 		return errors.WithStack(err)
 	}
 
+	return nil
+}
+
+// Update :
+func (repo *TaskRepository) Update(transaction repository.Transaction, task *model.Task) error {
+	trans := transaction.(*gorp.Transaction)
+
+	t := readTask(task)
+	if _, err := trans.Update(t); err != nil {
+		return errors.WithStack(err)
+	}
+	task.TaskData = t
+
+	if err := repo.Rules.Update(trans, t); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+// Done :
+func (repo *TaskRepository) Done(transaction repository.Transaction, task *model.Task, now time.Time) error {
+	if err := repo.Dones.Create(transaction, task, now); err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
@@ -124,38 +145,6 @@ func (repo *TaskRepository) Delete(transaction repository.Transaction, task *mod
 	}
 
 	if _, err := trans.Delete(task.TaskData); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
-}
-
-// Update :
-func (repo *TaskRepository) Update(transaction repository.Transaction, task *model.Task) error {
-	trans := transaction.(*gorp.Transaction)
-
-	rule := task.Rule()
-	t := &Task{
-		TaskID:       task.ID(),
-		TaskName:     task.Name(),
-		TaskStartAt:  task.StartAt(),
-		TaskRuleType: rule.Type(),
-	}
-
-	if _, err := trans.Update(t); err != nil {
-		return errors.WithStack(err)
-	}
-	task.TaskData = t
-
-	if err := repo.Rules.Update(trans, task.ID(), rule); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
-// Done :
-func (repo *TaskRepository) Done(transaction repository.Transaction, task *model.Task, now time.Time) error {
-	if err := repo.Dones.Create(transaction, task, now); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -182,12 +171,11 @@ func (repo *TaskRepository) One(id int) (*model.Task, error) {
 // Temporary :
 func (repo *TaskRepository) Temporary(now time.Time) *model.Task {
 	typ := model.TaskRuleTypePeriodic
-	rule := NewTaskRule(typ, WithPeriod(1, model.PeriodUnitDay))
 	return &model.Task{TaskData: &Task{
 		TaskName:     "name",
 		TaskStartAt:  now,
 		TaskRuleType: typ,
-		TaskRule:     rule,
+		TaskRule:     NewTaskRule(typ, WithPeriod(1, model.PeriodUnitDay)),
 	}}
 }
 
@@ -231,5 +219,28 @@ func (task *Task) LastDone() *model.DoneTask {
 	}
 	return &model.DoneTask{
 		DoneTaskData: task.LastDoneTask,
+	}
+}
+
+func readTask(task *model.Task) *Task {
+	rule := task.Rule()
+	return &Task{
+		TaskID:       task.ID(),
+		TaskName:     task.Name(),
+		TaskStartAt:  task.StartAt(),
+		TaskRuleType: rule.Type(),
+		TaskRule:     readTaskRule(rule),
+	}
+}
+
+func readTaskRule(rule *model.TaskRule) *TaskRule {
+	return &TaskRule{
+		RuleType:      rule.Type(),
+		RuleWeekdays:  rule.Weekdays(),
+		RuleDates:     rule.Dates(),
+		RuleMonthDays: rule.MonthDays(),
+		RuleDays:      rule.Days(),
+		RuleDateTimes: rule.DateTimes(),
+		RulePeriods:   rule.Periods(),
 	}
 }
