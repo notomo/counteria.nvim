@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math"
 	"time"
 )
 
@@ -62,10 +63,10 @@ func (deadline Deadline) Latest() time.Time {
 func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
 	duration := deadline.Latest().Sub(now)
 
-	h := int(duration.Hours())
+	h := int(math.Abs(duration.Hours()))
 	days := h / 24
 	hours := h % 24
-	minutes := int(duration.Minutes()) % 60
+	minutes := int(math.Abs(duration.Minutes())) % 60
 
 	return RemainingTime{
 		Days:     days,

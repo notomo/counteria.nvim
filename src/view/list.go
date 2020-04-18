@@ -1,7 +1,6 @@
 package view
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/notomo/counteria.nvim/src/domain/model"
@@ -25,8 +24,8 @@ func toLines(tasks []model.Task, now time.Time) ([][]byte, []vimlib.Highlight, e
 			at = doneAt.Format("2006-01-02 15:04:05")
 		}
 		deadline := task.Deadline()
-		remainingTime := deadline.RemainingTime(now)
-		remaining := fmt.Sprintf("%d days %d hours %d minutes", remainingTime.Days, remainingTime.Hours, remainingTime.Minutes)
+		remainingTime := component.RemainingTime{RemainingTime: deadline.RemainingTime(now)}
+		remaining := remainingTime.String()
 
 		status := " "
 		if !remainingTime.Exists() {
