@@ -35,7 +35,23 @@ func (task *Task) Deadline() Deadline {
 		Rule:     task.Rule(),
 		StartAt:  task.StartAt(),
 		LastDone: task.LastDone(),
+		Done:     task.Done(),
 	}
+}
+
+// Done :
+func (task *Task) Done() bool {
+	typ := task.Rule().Type()
+	switch typ {
+	case TaskRuleTypePeriodic:
+		return false
+	case TaskRuleTypeByTimes:
+		return task.LastDone() != nil
+	case TaskRuleTypeInDaysEveryMonth:
+	case TaskRuleTypeInDates:
+	case TaskRuleTypeInWeekdays:
+	}
+	panic("unreachable: invalid rule type: " + typ)
 }
 
 // Deadline :
@@ -43,6 +59,7 @@ type Deadline struct {
 	Rule     *TaskRule
 	StartAt  time.Time
 	LastDone *DoneTask
+	Done     bool
 }
 
 // Next :
@@ -51,17 +68,21 @@ func (deadline Deadline) Next() *time.Time {
 }
 
 // Latest :
-func (deadline Deadline) Latest() time.Time {
+func (deadline Deadline) Latest() *time.Time {
 	next := deadline.Next()
 	if next != nil {
-		return *next
+		return next
 	}
-	return *deadline.Rule.LastTime(deadline.StartAt, deadline.LastDone)
+	return deadline.Rule.LastTime(deadline.StartAt, deadline.LastDone)
 }
 
 // RemainingTime : how much time until task deadline
 func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
-	duration := deadline.Latest().Sub(now)
+	latest := deadline.Latest()
+	if latest == nil || deadline.Done {
+		return RemainingTime{}
+	}
+	duration := latest.Sub(now)
 
 	h := int(math.Abs(duration.Hours()))
 	days := h / 24
@@ -87,7 +108,12 @@ type RemainingTime struct {
 
 // Exists :
 func (t RemainingTime) Exists() bool {
-	return t.duration > 0
+	return t.duration >= 0
+}
+
+// Done :
+func (t RemainingTime) Done() bool {
+	return t.duration == 0
 }
 
 // DoneTask :

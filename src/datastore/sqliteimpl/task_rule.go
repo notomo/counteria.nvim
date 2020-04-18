@@ -151,8 +151,7 @@ type TaskRule struct {
 }
 
 func (rule *TaskRule) add(line TaskRuleLine) {
-	typ := rule.RuleType
-	switch typ {
+	switch typ := rule.RuleType; typ {
 	case model.TaskRuleTypePeriodic:
 		rule.RulePeriods = append(rule.RulePeriods, model.Period{
 			PeriodData: &TaskPeriod{
@@ -161,9 +160,13 @@ func (rule *TaskRule) add(line TaskRuleLine) {
 			},
 		})
 	case model.TaskRuleTypeByTimes:
+		rule.RuleDateTimes = append(rule.RuleDateTimes, *line.DateTime)
 	case model.TaskRuleTypeInDates:
+		rule.RuleDates = append(rule.RuleDates, *line.Date)
 	case model.TaskRuleTypeInDaysEveryMonth:
+		rule.RuleDays = append(rule.RuleDays, *line.Day)
 	case model.TaskRuleTypeInWeekdays:
+		rule.RuleWeekdays = append(rule.RuleWeekdays, *line.Weekday)
 	default:
 		panic("invalid rule type: " + typ)
 	}
@@ -211,8 +214,8 @@ type TaskRuleLine struct {
 	Weekday  *time.Weekday   `db:"weekday" check:"weekday"`
 	Day      *model.Day      `db:"day" check:"day"`
 	MonthDay *model.MonthDay `db:"month_day"`
-	Time     *time.Time      `db:"time"`
-	Date     *model.Date     `db:"date"`
+	DateTime *time.Time      `db:"date_time"`
+	Date     *model.Date     `db:"rule_date"` // avoid using `date`
 	TaskPeriod
 }
 
@@ -241,19 +244,46 @@ func (task *Task) ruleLines() []TaskRuleLine {
 		for _, p := range task.Rule().Periods() {
 			number := p.Number()
 			unit := p.Unit()
-			line := TaskRuleLine{
+			lines = append(lines, TaskRuleLine{
 				TaskID: task.ID(),
 				TaskPeriod: TaskPeriod{
 					PeriodNumber: &number,
 					PeriodUnit:   &unit,
 				},
-			}
-			lines = append(lines, line)
+			})
 		}
 	case model.TaskRuleTypeByTimes:
+		for _, t := range task.Rule().DateTimes() {
+			t := t
+			lines = append(lines, TaskRuleLine{
+				TaskID:   task.ID(),
+				DateTime: &t,
+			})
+		}
 	case model.TaskRuleTypeInDaysEveryMonth:
+		for _, day := range task.Rule().Days() {
+			day := day
+			lines = append(lines, TaskRuleLine{
+				TaskID: task.ID(),
+				Day:    &day,
+			})
+		}
 	case model.TaskRuleTypeInDates:
+		for _, date := range task.Rule().Dates() {
+			date := date
+			lines = append(lines, TaskRuleLine{
+				TaskID: task.ID(),
+				Date:   &date,
+			})
+		}
 	case model.TaskRuleTypeInWeekdays:
+		for _, weekday := range task.Rule().Weekdays() {
+			weekday := weekday
+			lines = append(lines, TaskRuleLine{
+				TaskID:  task.ID(),
+				Weekday: &weekday,
+			})
+		}
 	default:
 		panic("unreachable: invalid rule type: " + typ)
 	}

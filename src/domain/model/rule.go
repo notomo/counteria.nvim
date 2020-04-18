@@ -18,7 +18,8 @@ func (rule *TaskRule) String() string {
 		period := rule.Periods()[0]
 		return fmt.Sprintf("once per %d %s", period.Number(), period.Unit())
 	case TaskRuleTypeByTimes:
-		return "TODO"
+		dt := rule.DateTimes()[0]
+		return fmt.Sprintf("by %s", dt.Format("2006-01-02 15:04:05"))
 	case TaskRuleTypeInDates:
 		return "TODO"
 	case TaskRuleTypeInDaysEveryMonth:
@@ -97,6 +98,16 @@ type Days []Day
 // DateTimes :
 type DateTimes []time.Time
 
+// NextTime :
+func (dt DateTimes) NextTime(at time.Time) *time.Time {
+	for _, t := range dt {
+		if t.After(at) {
+			return &t
+		}
+	}
+	return nil
+}
+
 // TaskRuleType :
 type TaskRuleType string
 
@@ -125,6 +136,7 @@ func TaskRuleTypes() []TaskRuleType {
 }
 
 // NextTime :
+// TODO
 func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time {
 	typ := rule.Type()
 	switch typ {
@@ -134,6 +146,13 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		}
 		return rule.Periods().NextTime(lastDone.At())
 	case TaskRuleTypeByTimes:
+		if lastDone == nil {
+			return rule.DateTimes().NextTime(startAt)
+		}
+		return nil
+	case TaskRuleTypeInDaysEveryMonth:
+	case TaskRuleTypeInDates:
+	case TaskRuleTypeInWeekdays:
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }
@@ -144,11 +163,12 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 	typ := rule.Type()
 	switch typ {
 	case TaskRuleTypePeriodic:
-		if lastDone == nil {
-			return rule.Periods().NextTime(startAt)
-		}
-		return rule.Periods().NextTime(lastDone.At())
+		return nil
 	case TaskRuleTypeByTimes:
+		return rule.DateTimes().NextTime(startAt)
+	case TaskRuleTypeInDaysEveryMonth:
+	case TaskRuleTypeInDates:
+	case TaskRuleTypeInWeekdays:
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }

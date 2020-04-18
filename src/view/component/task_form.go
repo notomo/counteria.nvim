@@ -25,6 +25,7 @@ func NewTaskForm(task *model.Task) *TaskFormView {
 		TaskName:    task.Name(),
 		TaskStartAt: task.StartAt(),
 		TaskRuleView: TaskRuleView{
+			RuleType:      rule.Type(),
 			RuleWeekdays:  rule.Weekdays(),
 			RuleDays:      rule.Days(),
 			RuleMonthDays: rule.MonthDays(),
@@ -77,31 +78,18 @@ var _ model.TaskRuleData = &TaskRuleView{}
 
 // TaskRuleView :
 type TaskRuleView struct {
-	RuleWeekdays  model.Weekdays  `json:"weekdays"`
-	RuleDays      model.Days      `json:"days"`
-	RuleMonthDays model.MonthDays `json:"monthDays"`
-	RuleDateTimes model.DateTimes `json:"dateTimes"`
-	RuleDates     model.Dates     `json:"dates"`
-	RulePeriods   []PeriodView    `json:"periods"`
+	RuleType      model.TaskRuleType `json:"type"`
+	RuleWeekdays  model.Weekdays     `json:"weekdays"`
+	RuleDays      model.Days         `json:"days"`
+	RuleMonthDays model.MonthDays    `json:"monthDays"`
+	RuleDateTimes model.DateTimes    `json:"dateTimes"`
+	RuleDates     model.Dates        `json:"dates"`
+	RulePeriods   []PeriodView       `json:"periods"`
 }
 
 // Type :
 func (view *TaskRuleView) Type() model.TaskRuleType {
-	switch {
-	case len(view.RuleWeekdays) != 0:
-		return model.TaskRuleTypeInWeekdays
-	case len(view.RuleDays) != 0:
-		return model.TaskRuleTypeInDaysEveryMonth
-	case len(view.RuleMonthDays) != 0:
-		return model.TaskRuleTypeInDaysEveryMonth
-	case len(view.RuleDateTimes) != 0:
-		return model.TaskRuleTypeByTimes
-	case len(view.RuleDates) != 0:
-		return model.TaskRuleTypeInDates
-	case len(view.RulePeriods) != 0:
-		return model.TaskRuleTypePeriodic
-	}
-	panic("invalid rule")
+	return view.RuleType
 }
 
 // Weekdays :

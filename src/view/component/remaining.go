@@ -12,6 +12,10 @@ type RemainingTime struct {
 }
 
 func (time RemainingTime) String() string {
+	if time.Done() {
+		return "Done!"
+	}
+
 	var sign string
 	if !time.Exists() {
 		sign = "- "
