@@ -22,9 +22,14 @@ func (renderer *BufferRenderer) TaskFromForm(taskID int) (*model.Task, error) {
 	}
 	view.TaskID = taskID
 
-	return &model.Task{
+	task := &model.Task{
 		TaskData: &view,
-	}, nil
+	}
+	if err := task.Validate(); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return task, nil
 }
 
 // OneTask : a task page

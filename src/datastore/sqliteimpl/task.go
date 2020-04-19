@@ -82,7 +82,15 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 
 	if option.Sort.By == repository.SortByTaskRemains {
 		sort.Slice(tasks, func(i, j int) bool {
-			return tasks[i].Deadline().Latest().Unix() < tasks[j].Deadline().Latest().Unix()
+			latestI := tasks[i].Deadline().Latest()
+			if latestI == nil {
+				return false
+			}
+			latestJ := tasks[j].Deadline().Latest()
+			if latestJ == nil {
+				return false
+			}
+			return latestI.Unix() < latestJ.Unix()
 		})
 	}
 

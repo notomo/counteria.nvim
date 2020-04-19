@@ -19,6 +19,11 @@ type TaskData interface {
 	Rule() *TaskRule
 }
 
+// Validate :
+func (task *Task) Validate() error {
+	return task.Rule().Validate()
+}
+
 // DoneAt : the time the task was done
 func (task *Task) DoneAt() *time.Time {
 	lastDone := task.LastDone()
@@ -40,6 +45,7 @@ func (task *Task) Deadline() Deadline {
 }
 
 // Done :
+// TODO
 func (task *Task) Done() bool {
 	typ := task.Rule().Type()
 	switch typ {
@@ -50,6 +56,24 @@ func (task *Task) Done() bool {
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInDates:
 		return task.LastDone() != nil
+	case TaskRuleTypeInWeekdays:
+	}
+	panic("unreachable: invalid rule type: " + typ)
+}
+
+// IsActive :
+// TODO
+func (task *Task) IsActive(now time.Time) bool {
+	rule := task.Rule()
+	typ := rule.Type()
+	switch typ {
+	case TaskRuleTypePeriodic:
+		return true
+	case TaskRuleTypeByTimes:
+		return true
+	case TaskRuleTypeInDaysEveryMonth:
+	case TaskRuleTypeInDates:
+		return rule.Dates().Contains(now)
 	case TaskRuleTypeInWeekdays:
 	}
 	panic("unreachable: invalid rule type: " + typ)
@@ -80,8 +104,8 @@ func (deadline Deadline) Latest() *time.Time {
 // RemainingTime : how much time until task deadline
 func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
 	latest := deadline.Latest()
-	if latest == nil || deadline.Done {
-		return RemainingTime{}
+	if latest == nil {
+		return RemainingTime{done: deadline.Done}
 	}
 	duration := latest.Sub(now)
 
@@ -94,6 +118,7 @@ func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
 		Days:     days,
 		Hours:    hours,
 		Minutes:  minutes,
+		done:     deadline.Done,
 		duration: duration,
 	}
 }
@@ -104,6 +129,7 @@ type RemainingTime struct {
 	Hours   int
 	Minutes int
 
+	done     bool
 	duration time.Duration
 }
 
@@ -114,7 +140,7 @@ func (t RemainingTime) Exists() bool {
 
 // Done :
 func (t RemainingTime) Done() bool {
-	return t.duration == 0
+	return t.done
 }
 
 // DoneTask :

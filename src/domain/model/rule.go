@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -70,6 +71,15 @@ func (date Date) Time() time.Time {
 	return t
 }
 
+// Contains :
+func (date Date) Contains(at time.Time) bool {
+	t := date.Time()
+	y, m, d := t.Date()
+	start := time.Date(y, m, d, 0, 0, 0, 0, time.Local)
+	end := time.Date(y, m, d, 23, 59, 59, 0, time.Local)
+	return start.Before(at) && end.After(at)
+}
+
 // Value : FIXME: for datestore
 func (date Date) Value() (driver.Value, error) {
 	return driver.Value(date.Time()), nil
@@ -93,6 +103,16 @@ func (dates Dates) NextTime(at time.Time) *time.Time {
 		}
 	}
 	return nil
+}
+
+// Contains :
+func (dates Dates) Contains(at time.Time) bool {
+	for _, d := range dates {
+		if d.Contains(at) {
+			return true
+		}
+	}
+	return false
 }
 
 // MonthDay : mm-dd
@@ -188,4 +208,42 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 	case TaskRuleTypeInWeekdays:
 	}
 	panic("unreachable: invalid rule type: " + typ)
+}
+
+// Validate :
+func (rule *TaskRule) Validate() error {
+	typ := rule.Type()
+	switch typ {
+	case TaskRuleTypePeriodic:
+		ps := rule.Periods()
+		if len(ps) == 0 {
+			return errors.New("empty periods")
+		}
+		return nil
+	case TaskRuleTypeByTimes:
+		ds := rule.DateTimes()
+		if len(ds) == 0 {
+			return errors.New("empty date times")
+		}
+		return nil
+	case TaskRuleTypeInDates:
+		ds := rule.Dates()
+		if len(ds) == 0 {
+			return errors.New("empty dates")
+		}
+		return nil
+	case TaskRuleTypeInDaysEveryMonth:
+		md := rule.MonthDays()
+		if len(md) == 0 {
+			return errors.New("empty month days")
+		}
+		return nil
+	case TaskRuleTypeInWeekdays:
+		ws := rule.Weekdays()
+		if len(ws) == 0 {
+			return errors.New("empty weekdays")
+		}
+		return nil
+	}
+	return errors.New("invalid rule type: " + string(typ))
 }
