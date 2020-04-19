@@ -49,6 +49,7 @@ func (task *Task) Done() bool {
 		return task.LastDone() != nil
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInDates:
+		return task.LastDone() != nil
 	case TaskRuleTypeInWeekdays:
 	}
 	panic("unreachable: invalid rule type: " + typ)
