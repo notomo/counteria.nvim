@@ -9,6 +9,7 @@ import (
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/domain"
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/view"
 	"github.com/notomo/counteria.nvim/src/vimlib"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,7 @@ type Router struct {
 	Root                *command.RootCommand
 	BufferClientFactory *vimlib.BufferClientFactory
 	Redirector          *route.Redirector
+	Renderer            *view.Renderer
 }
 
 // New :
@@ -28,6 +30,7 @@ func New(vim *nvim.Nvim, root *command.RootCommand) *Router {
 		Root:                root,
 		BufferClientFactory: root.BufferClientFactory,
 		Redirector:          root.Redirector,
+		Renderer:            root.Renderer,
 	}
 }
 
@@ -117,8 +120,7 @@ func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
 // Error :
 func (router *Router) Error(err error) error {
 	if _, ok := errors.Cause(err).(*route.Err); ok {
-		var unused interface{}
-		return router.Vim.Call("counteria#messenger#warn", unused, err.Error())
+		return router.Renderer.Warn(err.Error())
 	}
 
 	trace := fmt.Sprintf("%+v", err)

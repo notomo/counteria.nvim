@@ -152,8 +152,22 @@ func (repo *TaskRepository) Delete(transaction repository.Transaction, task *mod
 
 // One :
 func (repo *TaskRepository) One(id int) (*model.Task, error) {
-	var t Task
-	err := repo.Db.SelectOne(&t, "SELECT * FROM tasks WHERE id=?", id)
+	var t TaskSummary
+	err := repo.Db.SelectOne(&t, ` 
+	SELECT
+		t.*
+		,done.id AS done_id
+		,done.at
+	FROM tasks t
+	LEFT JOIN done_tasks done ON t.id = done.task_id
+		AND NOT EXISTS (
+			SELECT 1
+			FROM done_tasks d
+			WHERE t.id = d.task_id
+			AND done.at < d.at
+		)
+	WHERE t.id = ?
+	`, id)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, domain.ErrNotFound
@@ -161,11 +175,26 @@ func (repo *TaskRepository) One(id int) (*model.Task, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	if err := repo.Rules.Bind(&t); err != nil {
+	task := &Task{
+		TaskID:       t.TaskID,
+		TaskName:     t.TaskName,
+		TaskStartAt:  t.StartAt,
+		TaskRuleType: t.TaskRuleType,
+	}
+	if t.LastDoneID != nil {
+		task.LastDoneTask = &DoneTask{
+			DoneTaskID: *t.LastDoneID,
+			TaskID:     task.TaskID,
+			TaskName:   task.TaskName,
+			DoneAt:     *t.LastDoneAt,
+		}
+	}
+
+	if err := repo.Rules.Bind(task); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return &model.Task{TaskData: &t}, nil
+	return &model.Task{TaskData: task}, nil
 }
 
 // Temporary :

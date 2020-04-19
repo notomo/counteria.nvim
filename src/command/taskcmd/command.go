@@ -116,6 +116,10 @@ func (cmd *Command) Done(taskID int) error {
 		return errors.WithStack(err)
 	}
 
+	if task.Done() {
+		return cmd.Renderer.Warn("already done")
+	}
+
 	now := cmd.Clock.Now()
 	transaction, err := cmd.TransactionFactory.Begin()
 	if err != nil {
