@@ -11,8 +11,9 @@ import (
 
 // Table :
 type Table struct {
-	Base interface{}
-	Name string
+	Base      interface{}
+	Name      string
+	RawChecks []string
 }
 
 var sqlSuffix = regexp.MustCompile(`\)\s*;$`)
@@ -20,7 +21,7 @@ var sqlSuffix = regexp.MustCompile(`\)\s*;$`)
 // Create :
 func (table *Table) Create(dbmap *gorp.DbMap) error {
 	checks := Checks{}
-	if err := checks.gather(table.Base); err != nil {
+	if err := checks.gather(table.Base, table.RawChecks...); err != nil {
 		return errors.WithStack(err)
 	}
 

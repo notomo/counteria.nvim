@@ -14,9 +14,14 @@ import (
 type Check struct {
 	Fn         func(column string) string
 	ColumnName string
+
+	RawCheck string
 }
 
 func (c Check) String() string {
+	if c.RawCheck != "" {
+		return fmt.Sprintf("CHECK (%s)", c.RawCheck)
+	}
 	return fmt.Sprintf("CHECK (%s)", c.Fn(c.ColumnName))
 }
 
@@ -31,7 +36,7 @@ func (checks Checks) String() string {
 	return strings.Join(parts, "")
 }
 
-func (checks *Checks) gather(base interface{}) error {
+func (checks *Checks) gather(base interface{}, rawChecks ...string) error {
 	v := reflect.TypeOf(base)
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
@@ -66,6 +71,11 @@ func (checks *Checks) gather(base interface{}) error {
 			Fn:         fn,
 		})
 	}
+
+	for _, raw := range rawChecks {
+		*checks = append(*checks, Check{RawCheck: raw})
+	}
+
 	return nil
 }
 

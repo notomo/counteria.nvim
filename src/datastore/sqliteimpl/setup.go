@@ -11,7 +11,11 @@ func Setup() (*domain.Dep, error) {
 	tables := database.Tables{
 		{Base: Task{}, Name: "tasks"},
 		{Base: DoneTask{}, Name: "done_tasks"},
-		{Base: TaskRuleLine{}, Name: "task_rule_lines"},
+		{
+			Base:      TaskRuleLine{},
+			Name:      "task_rule_lines",
+			RawChecks: ruleLineChecks,
+		},
 	}
 	dbmap, err := database.Setup(tables)
 	if err != nil {
@@ -26,4 +30,69 @@ func Setup() (*domain.Dep, error) {
 		},
 		TransactionFactory: &TransactionFactory{Db: dbmap},
 	}, nil
+}
+
+var ruleLineChecks = []string{
+	`(
+		weekday IS NOT NULL
+		AND day IS NULL
+		AND month_day IS NULL
+		AND date_time IS NULL
+		AND rule_date IS NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	) OR
+		weekday IS NULL`,
+	`(
+		weekday IS NULL
+		AND day IS NOT NULL
+		AND month_day IS NULL
+		AND date_time IS NULL
+		AND rule_date IS NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	) OR
+		day IS NULL`,
+	`(
+		weekday IS NULL
+		AND day IS NULL
+		AND month_day IS NOT NULL
+		AND date_time IS NULL
+		AND rule_date IS NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	) OR
+		month_day IS NULL`,
+	`(
+		weekday IS NULL
+		AND day IS NULL
+		AND month_day IS NULL
+		AND date_time IS NOT NULL
+		AND rule_date IS NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	) OR
+		date_time IS NULL`,
+	`(
+		weekday IS NULL
+		AND day IS NULL
+		AND month_day IS NULL
+		AND date_time IS NULL
+		AND rule_date IS NOT NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	) OR
+		rule_date IS NULL`,
+	`(
+		weekday IS NULL
+		AND day IS NULL
+		AND month_day IS NULL
+		AND date_time IS NULL
+		AND rule_date IS NULL
+		AND period_number IS NOT NULL
+		AND period_unit IS NOT NULL
+	) OR (
+		period_number IS NULL
+		AND period_unit IS NULL
+	)`,
 }
