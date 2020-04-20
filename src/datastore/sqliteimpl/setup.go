@@ -95,4 +95,13 @@ var ruleLineChecks = []string{
 		period_number IS NULL
 		AND period_unit IS NULL
 	)`,
+	`NOT (
+		weekday IS NULL
+		AND day IS NULL
+		AND month_day IS NULL
+		AND date_time IS NULL
+		AND rule_date IS NULL
+		AND period_number IS NULL
+		AND period_unit IS NULL
+	)`,
 }
