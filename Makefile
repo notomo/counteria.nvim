@@ -26,8 +26,21 @@ show:
 	$(DB_EXEC)'SELECT * FROM done_tasks;'
 	$(DB_EXEC)'SELECT * FROM task_rule_lines;'
 
+lint:
+	staticcheck ./...
+	scopelint --set-exit-status ./...
+	golint -set_exit_status ./...
+	test -z "`goimports -d ./`" || (echo "`goimports -d ./`"; exit 1)
+	swityp -target github.com/notomo/counteria.nvim/src/domain/model.TaskRuleType ./...
+	swityp -target github.com/notomo/counteria.nvim/src/domain/model.PeriodUnit ./...
+
+setup:
+	cat tools.go | awk -F'"' '/_/ {print $$2}' | xargs -tI {} go install {}
+
 .PHONY: test
 .PHONY: build
 .PHONY: clear
 .PHONY: db_exec
 .PHONY: show
+.PHONY: lint
+.PHONY: setup

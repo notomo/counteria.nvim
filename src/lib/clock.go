@@ -2,7 +2,7 @@ package lib
 
 import "time"
 
-// Clock :
+// Clock : provide the current time
 type Clock interface {
 	Now() time.Time
 }
