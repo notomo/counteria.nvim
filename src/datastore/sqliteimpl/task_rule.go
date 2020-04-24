@@ -151,7 +151,8 @@ type TaskRule struct {
 }
 
 func (rule *TaskRule) add(line TaskRuleLine) {
-	switch typ := rule.RuleType; typ {
+	typ := rule.RuleType
+	switch typ {
 	case model.TaskRuleTypePeriodic:
 		rule.RulePeriods = append(rule.RulePeriods, model.Period{
 			PeriodData: &TaskPeriod{
@@ -167,6 +168,8 @@ func (rule *TaskRule) add(line TaskRuleLine) {
 		rule.RuleDays = append(rule.RuleDays, *line.Day)
 	case model.TaskRuleTypeInWeekdays:
 		rule.RuleWeekdays = append(rule.RuleWeekdays, *line.Weekday)
+	case model.TaskRuleTypeNone:
+		// noop
 	default:
 		panic("invalid rule type: " + typ)
 	}
@@ -284,6 +287,8 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				Weekday: &weekday,
 			})
 		}
+	case model.TaskRuleTypeNone:
+		// noop
 	default:
 		panic("unreachable: invalid rule type: " + typ)
 	}

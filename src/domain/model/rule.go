@@ -28,6 +28,8 @@ func (rule *TaskRule) String() string {
 		return "TODO"
 	case TaskRuleTypeInWeekdays:
 		return "TODO"
+	case TaskRuleTypeNone:
+		return "None"
 	}
 	panic("invalid rule type: " + typ)
 }
@@ -154,6 +156,8 @@ var (
 	TaskRuleTypeInDates = TaskRuleType("inDates")
 	// TaskRuleTypeInWeekdays :
 	TaskRuleTypeInWeekdays = TaskRuleType("inWeekdays")
+	// TaskRuleTypeNone :
+	TaskRuleTypeNone = TaskRuleType("none")
 )
 
 // TaskRuleTypes :
@@ -164,6 +168,7 @@ func TaskRuleTypes() []TaskRuleType {
 		TaskRuleTypeInDaysEveryMonth,
 		TaskRuleTypeInDates,
 		TaskRuleTypeInWeekdays,
+		TaskRuleTypeNone,
 	}
 }
 
@@ -189,6 +194,8 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInWeekdays:
+	case TaskRuleTypeNone:
+		return nil
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }
@@ -206,6 +213,8 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		return rule.Dates().NextTime(startAt)
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInWeekdays:
+	case TaskRuleTypeNone:
+		return nil
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }
@@ -242,6 +251,11 @@ func (rule *TaskRule) Validate() error {
 		ws := rule.Weekdays()
 		if len(ws) == 0 {
 			return errors.New("empty weekdays")
+		}
+		return nil
+	case TaskRuleTypeNone:
+		if len(rule.Periods()) > 0 || len(rule.DateTimes()) > 0 || len(rule.Dates()) > 0 || len(rule.MonthDays()) > 0 || len(rule.Weekdays()) > 0 {
+			return errors.New("should be empty")
 		}
 		return nil
 	}

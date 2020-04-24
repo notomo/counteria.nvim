@@ -57,6 +57,8 @@ func (task *Task) Done() bool {
 	case TaskRuleTypeInDates:
 		return task.LastDone() != nil
 	case TaskRuleTypeInWeekdays:
+	case TaskRuleTypeNone:
+		return task.LastDone() != nil
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }
@@ -75,6 +77,8 @@ func (task *Task) IsActive(now time.Time) bool {
 	case TaskRuleTypeInDates:
 		return rule.Dates().Contains(now)
 	case TaskRuleTypeInWeekdays:
+	case TaskRuleTypeNone:
+		return true
 	}
 	panic("unreachable: invalid rule type: " + typ)
 }
