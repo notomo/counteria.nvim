@@ -77,11 +77,14 @@ func (router *Router) Exec(method route.Method, path string, bufnr nvim.Buffer) 
 	}
 
 	if err := router.exec(req, bufnr); err != nil {
-		switch errors.Cause(err) {
+		raw := errors.Cause(err)
+		switch raw {
 		case domain.ErrNotFound:
 			return route.NewErrNotFound(bufferPath)
-		case model.ErrRuleValidation:
-			return route.NewErrValidation(err, bufferPath)
+		}
+		switch raw.(type) {
+		case model.ErrValidation:
+			return route.NewErrValidation(err)
 		}
 		return errors.WithStack(err)
 	}

@@ -4,8 +4,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // TaskRule :
@@ -161,6 +159,10 @@ var (
 	TaskRuleTypeNone = TaskRuleType("none")
 )
 
+func (typ TaskRuleType) String() string {
+	return string(typ)
+}
+
 // TaskRuleTypes :
 func TaskRuleTypes() []TaskRuleType {
 	return []TaskRuleType{
@@ -220,45 +222,40 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 	panic("unreachable: invalid rule type: " + typ)
 }
 
-var (
-	// ErrRuleValidation :
-	ErrRuleValidation = fmt.Errorf("rule validation")
-)
-
 // Validate :
 func (rule *TaskRule) Validate() error {
 	typ := rule.Type()
 	switch typ {
 	case TaskRuleTypePeriodic:
 		if len(rule.Periods()) == 0 {
-			return errors.Wrap(ErrRuleValidation, "empty periods")
+			return NewErrValidation(ErrValidationRule, "empty periods")
 		}
 		return nil
 	case TaskRuleTypeByTimes:
 		if len(rule.DateTimes()) == 0 {
-			return errors.Wrap(ErrRuleValidation, "empty date times")
+			return NewErrValidation(ErrValidationRule, "empty date times")
 		}
 		return nil
 	case TaskRuleTypeInDates:
 		if len(rule.Dates()) == 0 {
-			return errors.Wrap(ErrRuleValidation, "empty dates")
+			return NewErrValidation(ErrValidationRule, "empty dates")
 		}
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
 		if len(rule.MonthDays()) == 0 {
-			return errors.Wrap(ErrRuleValidation, "empty month days")
+			return NewErrValidation(ErrValidationRule, "empty month days")
 		}
 		return nil
 	case TaskRuleTypeInWeekdays:
 		if len(rule.Weekdays()) == 0 {
-			return errors.Wrap(ErrRuleValidation, "empty weekdays")
+			return NewErrValidation(ErrValidationRule, "empty weekdays")
 		}
 		return nil
 	case TaskRuleTypeNone:
 		if len(rule.Periods()) > 0 || len(rule.DateTimes()) > 0 || len(rule.Dates()) > 0 || len(rule.MonthDays()) > 0 || len(rule.Weekdays()) > 0 {
-			return errors.Wrap(ErrRuleValidation, "should be empty")
+			return NewErrValidation(ErrValidationRule, "should be empty")
 		}
 		return nil
 	}
-	return errors.New("invalid rule type: " + string(typ))
+	return NewErrValidation(ErrValidationRule, "invalid type: "+typ.String())
 }

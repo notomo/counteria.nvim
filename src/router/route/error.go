@@ -7,6 +7,8 @@ var (
 	ErrNotFound = fmt.Errorf("not found")
 	// ErrInvalidAction : 400?
 	ErrInvalidAction = fmt.Errorf("invalid action")
+	// ErrValidation : create, update validation failed
+	ErrValidation = fmt.Errorf("validation")
 )
 
 // Err :
@@ -32,6 +34,6 @@ func NewErrInvalidAction(action string) error {
 }
 
 // NewErrValidation :
-func NewErrValidation(err error, path string) error {
-	return &Err{Err: err, Arg: path}
+func NewErrValidation(err error) error {
+	return &Err{Err: ErrValidation, Arg: err.Error()}
 }
