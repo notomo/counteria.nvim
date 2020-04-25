@@ -11,8 +11,9 @@ var (
 
 // Err :
 type Err struct {
-	Err error
-	Arg string
+	Err    error
+	Arg    string
+	IsWarn bool
 }
 
 // Error :
@@ -22,10 +23,15 @@ func (e *Err) Error() string {
 
 // NewErrNotFound :
 func NewErrNotFound(path string) error {
-	return &Err{Err: ErrNotFound, Arg: path}
+	return &Err{Err: ErrNotFound, Arg: path, IsWarn: true}
 }
 
 // NewErrInvalidAction :
 func NewErrInvalidAction(action string) error {
-	return &Err{Err: ErrInvalidAction, Arg: action}
+	return &Err{Err: ErrInvalidAction, Arg: action, IsWarn: true}
+}
+
+// NewErrValidation :
+func NewErrValidation(err error, path string) error {
+	return &Err{Err: err, Arg: path}
 }

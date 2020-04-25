@@ -8,6 +8,7 @@ import (
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/command"
 	"github.com/notomo/counteria.nvim/src/domain"
+	"github.com/notomo/counteria.nvim/src/domain/model"
 	"github.com/notomo/counteria.nvim/src/router/route"
 	"github.com/notomo/counteria.nvim/src/view"
 	"github.com/notomo/counteria.nvim/src/vimlib"
@@ -76,8 +77,11 @@ func (router *Router) Exec(method route.Method, path string, bufnr nvim.Buffer) 
 	}
 
 	if err := router.exec(req, bufnr); err != nil {
-		if errors.Cause(err) == domain.ErrNotFound {
+		switch errors.Cause(err) {
+		case domain.ErrNotFound:
 			return route.NewErrNotFound(bufferPath)
+		case model.ErrRuleValidation:
+			return route.NewErrValidation(err, bufferPath)
 		}
 		return errors.WithStack(err)
 	}
@@ -119,8 +123,11 @@ func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
 
 // Error :
 func (router *Router) Error(err error) error {
-	if _, ok := errors.Cause(err).(*route.Err); ok {
-		return router.Renderer.Warn(err.Error())
+	if rerr, ok := errors.Cause(err).(*route.Err); ok {
+		if rerr.IsWarn {
+			return router.Renderer.Warn(err.Error())
+		}
+		return router.Renderer.Err(err.Error())
 	}
 
 	trace := fmt.Sprintf("%+v", err)

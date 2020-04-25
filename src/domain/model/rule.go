@@ -2,9 +2,10 @@ package model
 
 import (
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // TaskRule :
@@ -219,43 +220,43 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 	panic("unreachable: invalid rule type: " + typ)
 }
 
+var (
+	// ErrRuleValidation :
+	ErrRuleValidation = fmt.Errorf("rule validation")
+)
+
 // Validate :
 func (rule *TaskRule) Validate() error {
 	typ := rule.Type()
 	switch typ {
 	case TaskRuleTypePeriodic:
-		ps := rule.Periods()
-		if len(ps) == 0 {
-			return errors.New("empty periods")
+		if len(rule.Periods()) == 0 {
+			return errors.Wrap(ErrRuleValidation, "empty periods")
 		}
 		return nil
 	case TaskRuleTypeByTimes:
-		ds := rule.DateTimes()
-		if len(ds) == 0 {
-			return errors.New("empty date times")
+		if len(rule.DateTimes()) == 0 {
+			return errors.Wrap(ErrRuleValidation, "empty date times")
 		}
 		return nil
 	case TaskRuleTypeInDates:
-		ds := rule.Dates()
-		if len(ds) == 0 {
-			return errors.New("empty dates")
+		if len(rule.Dates()) == 0 {
+			return errors.Wrap(ErrRuleValidation, "empty dates")
 		}
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
-		md := rule.MonthDays()
-		if len(md) == 0 {
-			return errors.New("empty month days")
+		if len(rule.MonthDays()) == 0 {
+			return errors.Wrap(ErrRuleValidation, "empty month days")
 		}
 		return nil
 	case TaskRuleTypeInWeekdays:
-		ws := rule.Weekdays()
-		if len(ws) == 0 {
-			return errors.New("empty weekdays")
+		if len(rule.Weekdays()) == 0 {
+			return errors.Wrap(ErrRuleValidation, "empty weekdays")
 		}
 		return nil
 	case TaskRuleTypeNone:
 		if len(rule.Periods()) > 0 || len(rule.DateTimes()) > 0 || len(rule.Dates()) > 0 || len(rule.MonthDays()) > 0 || len(rule.Weekdays()) > 0 {
-			return errors.New("should be empty")
+			return errors.Wrap(ErrRuleValidation, "should be empty")
 		}
 		return nil
 	}

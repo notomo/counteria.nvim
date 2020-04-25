@@ -20,3 +20,9 @@ function! counteria#messenger#warn(message) abort
     call s:func('[counteria] ' . a:message)
     echohl None
 endfunction
+
+function! counteria#messenger#error(message) abort
+    echohl ErrorMsg
+    call s:func('[counteria] ' . a:message)
+    echohl None
+endfunction
