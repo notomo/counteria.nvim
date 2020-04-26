@@ -25,7 +25,8 @@ func (rule *TaskRule) String() string {
 		date := rule.Dates()[0]
 		return fmt.Sprintf("in %s", date)
 	case TaskRuleTypeInDaysEveryMonth:
-		return "TODO"
+		day := rule.Days()[0]
+		return fmt.Sprintf("in %d evety month", day)
 	case TaskRuleTypeInWeekdays:
 		weekday := rule.Weekdays()[0]
 		return fmt.Sprintf("in %s", weekday)
@@ -167,8 +168,47 @@ type MonthDays []MonthDay
 // Day : dd
 type Day int
 
+// Contains :
+func (day Day) Contains(at time.Time) bool {
+	d := at.Day()
+	return int(day) == d
+}
+
+// NextTime :
+func (day Day) NextTime(at time.Time) time.Time {
+	y, m, d := at.Date()
+	targetDay := int(day)
+	if targetDay < d {
+		m = m + 1
+	}
+	t := time.Date(y, m, targetDay, 23, 59, 59, 999999999, time.Local)
+	if t.Month() == m {
+		return t
+	}
+	return time.Date(t.Year(), t.Month(), 1, 23, 59, 59, 999999999, time.Local).AddDate(0, 0, -1)
+}
+
 // Days :
 type Days []Day
+
+// Contains :
+func (days Days) Contains(at time.Time) bool {
+	for _, d := range days {
+		if d.Contains(at) {
+			return true
+		}
+	}
+	return false
+}
+
+// NextTime :
+func (days Days) NextTime(at time.Time) *time.Time {
+	for _, d := range days {
+		t := d.NextTime(at)
+		return &t
+	}
+	return nil
+}
 
 // DateTimes :
 type DateTimes []time.Time
@@ -218,7 +258,6 @@ func TaskRuleTypes() []TaskRuleType {
 }
 
 // NextTime :
-// TODO
 func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time {
 	typ := rule.Type()
 	switch typ {
@@ -238,6 +277,10 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		}
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
+		if lastDone == nil {
+			return rule.Days().NextTime(startAt)
+		}
+		return rule.Days().NextTime(lastDone.At())
 	case TaskRuleTypeInWeekdays:
 		if lastDone == nil {
 			return rule.Weekdays().NextTime(startAt)
@@ -250,7 +293,6 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 }
 
 // LastTime :
-// TODO
 func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time {
 	typ := rule.Type()
 	switch typ {
@@ -261,6 +303,10 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 	case TaskRuleTypeInDates:
 		return rule.Dates().NextTime(startAt)
 	case TaskRuleTypeInDaysEveryMonth:
+		if lastDone == nil {
+			return rule.Days().NextTime(startAt)
+		}
+		return rule.Days().NextTime(lastDone.At())
 	case TaskRuleTypeInWeekdays:
 		if lastDone == nil {
 			return rule.Weekdays().NextTime(startAt)
@@ -292,8 +338,8 @@ func (rule *TaskRule) Validate() error {
 		}
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
-		if len(rule.MonthDays()) == 0 {
-			return NewErrValidation(ErrValidationRule, "empty month days")
+		if len(rule.Days()) == 0 {
+			return NewErrValidation(ErrValidationRule, "empty days")
 		}
 		return nil
 	case TaskRuleTypeInWeekdays:
@@ -302,7 +348,7 @@ func (rule *TaskRule) Validate() error {
 		}
 		return nil
 	case TaskRuleTypeNone:
-		if len(rule.Periods()) > 0 || len(rule.DateTimes()) > 0 || len(rule.Dates()) > 0 || len(rule.MonthDays()) > 0 || len(rule.Weekdays()) > 0 {
+		if len(rule.Periods()) > 0 || len(rule.DateTimes()) > 0 || len(rule.Dates()) > 0 || len(rule.Days()) > 0 || len(rule.MonthDays()) > 0 || len(rule.Weekdays()) > 0 {
 			return NewErrValidation(ErrValidationRule, "should be empty")
 		}
 		return nil
