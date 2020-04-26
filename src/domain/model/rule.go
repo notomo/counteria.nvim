@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql/driver"
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -26,7 +27,8 @@ func (rule *TaskRule) String() string {
 	case TaskRuleTypeInDaysEveryMonth:
 		return "TODO"
 	case TaskRuleTypeInWeekdays:
-		return "TODO"
+		weekday := rule.Weekdays()[0]
+		return fmt.Sprintf("in %s", weekday)
 	case TaskRuleTypeNone:
 		return "None"
 	}
@@ -45,12 +47,52 @@ type TaskRuleData interface {
 	Periods() Periods
 }
 
+// Weekday :
+type Weekday time.Weekday
+
+// NextTime :
+func (weekday Weekday) NextTime(at time.Time) time.Time {
+	w := at.Weekday()
+	diff := int(math.Abs(float64(w - time.Weekday(weekday))))
+	y, m, d := at.Date()
+	return time.Date(y, m, d+diff, 23, 59, 59, 999999999, time.Local)
+}
+
+// Contains :
+func (weekday Weekday) Contains(at time.Time) bool {
+	w := at.Weekday()
+	return w == time.Weekday(weekday)
+}
+
+func (weekday Weekday) String() string {
+	return time.Weekday(weekday).String()
+}
+
 // Weekdays :
-type Weekdays []time.Weekday
+type Weekdays []Weekday
+
+// NextTime :
+func (weekdays Weekdays) NextTime(at time.Time) *time.Time {
+	for _, d := range weekdays {
+		t := d.NextTime(at)
+		return &t
+	}
+	return nil
+}
+
+// Contains :
+func (weekdays Weekdays) Contains(at time.Time) bool {
+	for _, d := range weekdays {
+		if d.Contains(at) {
+			return true
+		}
+	}
+	return false
+}
 
 // AllWeekdays :
-func AllWeekdays() Weekdays {
-	return Weekdays{
+func AllWeekdays() []time.Weekday {
+	return []time.Weekday{
 		time.Sunday,
 		time.Monday,
 		time.Tuesday,
@@ -197,6 +239,10 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		return nil
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInWeekdays:
+		if lastDone == nil {
+			return rule.Weekdays().NextTime(startAt)
+		}
+		return rule.Weekdays().NextTime(lastDone.At())
 	case TaskRuleTypeNone:
 		return nil
 	}
@@ -216,6 +262,10 @@ func (rule *TaskRule) LastTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		return rule.Dates().NextTime(startAt)
 	case TaskRuleTypeInDaysEveryMonth:
 	case TaskRuleTypeInWeekdays:
+		if lastDone == nil {
+			return rule.Weekdays().NextTime(startAt)
+		}
+		return rule.Weekdays().NextTime(lastDone.At())
 	case TaskRuleTypeNone:
 		return nil
 	}

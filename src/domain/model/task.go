@@ -57,6 +57,7 @@ func (task *Task) Done() bool {
 	case TaskRuleTypeInDates:
 		return task.LastDone() != nil
 	case TaskRuleTypeInWeekdays:
+		return task.LastDone() != nil && task.Rule().Weekdays().Contains(task.LastDone().At())
 	case TaskRuleTypeNone:
 		return task.LastDone() != nil
 	}
@@ -77,6 +78,7 @@ func (task *Task) IsActive(now time.Time) bool {
 	case TaskRuleTypeInDates:
 		return rule.Dates().Contains(now)
 	case TaskRuleTypeInWeekdays:
+		return rule.Weekdays().Contains(now)
 	case TaskRuleTypeNone:
 		return true
 	}

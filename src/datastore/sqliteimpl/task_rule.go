@@ -160,19 +160,23 @@ func (rule *TaskRule) add(line TaskRuleLine) {
 				PeriodUnit:   line.PeriodUnit,
 			},
 		})
+		return
 	case model.TaskRuleTypeByTimes:
 		rule.RuleDateTimes = append(rule.RuleDateTimes, *line.DateTime)
+		return
 	case model.TaskRuleTypeInDates:
 		rule.RuleDates = append(rule.RuleDates, *line.Date)
+		return
 	case model.TaskRuleTypeInDaysEveryMonth:
 		rule.RuleDays = append(rule.RuleDays, *line.Day)
+		return
 	case model.TaskRuleTypeInWeekdays:
 		rule.RuleWeekdays = append(rule.RuleWeekdays, *line.Weekday)
+		return
 	case model.TaskRuleTypeNone:
-		// noop
-	default:
-		panic("invalid rule type: " + typ)
+		return
 	}
+	panic("invalid rule type: " + typ)
 }
 
 // Type :
@@ -214,7 +218,7 @@ func (rule *TaskRule) Periods() model.Periods {
 type TaskRuleLine struct {
 	ID       int             `db:"id, primarykey, autoincrement"`
 	TaskID   int             `db:"task_id, notnull" foreign:"tasks(id)"`
-	Weekday  *time.Weekday   `db:"weekday" check:"weekday"`
+	Weekday  *model.Weekday  `db:"weekday" check:"weekday"`
 	Day      *model.Day      `db:"day" check:"day"`
 	MonthDay *model.MonthDay `db:"month_day"`
 	DateTime *time.Time      `db:"date_time"`
@@ -242,7 +246,8 @@ func (period TaskPeriod) Unit() model.PeriodUnit {
 
 func (task *Task) ruleLines() []TaskRuleLine {
 	lines := []TaskRuleLine{}
-	switch typ := task.TaskRuleType; typ {
+	typ := task.TaskRuleType
+	switch typ {
 	case model.TaskRuleTypePeriodic:
 		for _, p := range task.Rule().Periods() {
 			number := p.Number()
@@ -255,6 +260,7 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				},
 			})
 		}
+		return lines
 	case model.TaskRuleTypeByTimes:
 		for _, t := range task.Rule().DateTimes() {
 			t := t
@@ -263,6 +269,7 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				DateTime: &t,
 			})
 		}
+		return lines
 	case model.TaskRuleTypeInDaysEveryMonth:
 		for _, day := range task.Rule().Days() {
 			day := day
@@ -271,6 +278,7 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				Day:    &day,
 			})
 		}
+		return lines
 	case model.TaskRuleTypeInDates:
 		for _, date := range task.Rule().Dates() {
 			date := date
@@ -279,6 +287,7 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				Date:   &date,
 			})
 		}
+		return lines
 	case model.TaskRuleTypeInWeekdays:
 		for _, weekday := range task.Rule().Weekdays() {
 			weekday := weekday
@@ -287,10 +296,9 @@ func (task *Task) ruleLines() []TaskRuleLine {
 				Weekday: &weekday,
 			})
 		}
+		return lines
 	case model.TaskRuleTypeNone:
-		// noop
-	default:
-		panic("unreachable: invalid rule type: " + typ)
+		return lines
 	}
-	return lines
+	panic("unreachable: invalid rule type: " + typ)
 }
