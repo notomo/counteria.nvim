@@ -26,7 +26,7 @@ func (rule *TaskRule) String() string {
 		return fmt.Sprintf("in %s", date)
 	case TaskRuleTypeInDaysEveryMonth:
 		day := rule.Days()[0]
-		return fmt.Sprintf("in %d evety month", day)
+		return fmt.Sprintf("in %d every month", day)
 	case TaskRuleTypeInWeekdays:
 		weekday := rule.Weekdays()[0]
 		return fmt.Sprintf("in %s", weekday)

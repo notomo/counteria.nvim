@@ -10,7 +10,7 @@ DB := $(HOME)/.local/share/counteria/default.db
 clear:
 	rm $(DB)
 
-ARG := .help
+db_exec: ARG := .help
 db_exec:
 	sqlite3 $(DB) '.headers on' '.mode column' '$(ARG)'
 	@echo
