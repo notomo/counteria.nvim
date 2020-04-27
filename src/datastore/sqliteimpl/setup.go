@@ -7,7 +7,12 @@ import (
 )
 
 // Setup : tables, dependencies
-func Setup() (*domain.Dep, error) {
+func Setup(opts ...func(*database.Config)) (*domain.Dep, error) {
+	config := &database.Config{}
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	tables := database.Tables{
 		{Base: Task{}, Name: "tasks"},
 		{Base: DoneTask{}, Name: "done_tasks"},
@@ -17,7 +22,7 @@ func Setup() (*domain.Dep, error) {
 			RawChecks: ruleLineChecks,
 		},
 	}
-	dbmap, err := database.Setup(tables)
+	dbmap, err := database.Setup(tables, config)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -104,4 +109,11 @@ var ruleLineChecks = []string{
 		AND period_number IS NULL
 		AND period_unit IS NULL
 	)`,
+}
+
+// WithDataPath :
+func WithDataPath(path string) func(*database.Config) {
+	return func(op *database.Config) {
+		op.DataPath = path
+	}
 }

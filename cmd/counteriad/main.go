@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 
@@ -18,7 +19,14 @@ import (
 	"github.com/notomo/counteria.nvim/src/vimlib"
 )
 
+var dataPath string
+
+func init() {
+	flag.StringVar(&dataPath, "data", "", "datastore file path")
+}
+
 func main() {
+	flag.Parse()
 	if err := run(); err != nil {
 		panic(err)
 	}
@@ -44,7 +52,9 @@ func run() error {
 		return errors.WithStack(err)
 	}
 
-	dep, err := sqliteimpl.Setup()
+	dep, err := sqliteimpl.Setup(
+		sqliteimpl.WithDataPath(dataPath),
+	)
 	if err != nil {
 		return errors.WithStack(err)
 	}

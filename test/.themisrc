@@ -2,6 +2,7 @@
 call themis#option('recursive', 1)
 
 let s:root = getcwd()
+let s:test_data_dir = s:root . '/test/_test_data'
 
 function! TestHelper() abort
     let helper = {
@@ -9,10 +10,12 @@ function! TestHelper() abort
     \ }
 
     function! helper.before_each() abort
+        call mkdir(s:test_data_dir, 'p')
         execute 'cd' s:root
 
         call counteria#messenger#set_func({ msg -> themis#log('[test messenger] ' . msg) })
         call themis#log('')
+        let g:counteria_data_path = s:test_data_dir . '/test.db'
 
         filetype on
         syntax enable
@@ -25,6 +28,12 @@ function! TestHelper() abort
 
         filetype off
         syntax off
+
+        let job = counteria#last_job()
+        if !empty(job)
+            call job.stop()
+        endif
+        call delete(s:test_data_dir, 'rf')
     endfunction
 
     function! helper.suite(name) abort

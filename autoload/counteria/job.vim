@@ -11,7 +11,12 @@ function! counteria#job#new() abort
             return
         endif
 
-        let id = jobstart([s:executable], {
+        let cmd = [s:executable]
+        if exists('g:counteria_data_path')
+            call add(cmd, '-data=' . fnameescape(g:counteria_data_path))
+        endif
+
+        let id = jobstart(cmd, {
             \ 'rpc': v:true,
             \ 'on_stderr': function('s:on_stderr')
         \ })
