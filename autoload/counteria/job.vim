@@ -1,15 +1,17 @@
 
+let s:executable = expand('<sfile>:h:h:h') . '/bin/counteriad'
+
 function! counteria#job#new() abort
     let job = {
         \ 'id': 0,
     \ }
 
-    function! job.start(executable) abort
+    function! job.start() abort
         if self.id != 0 && self.is_running()
             return
         endif
 
-        let id = jobstart([a:executable], {
+        let id = jobstart([s:executable], {
             \ 'rpc': v:true,
             \ 'on_stderr': function('s:on_stderr')
         \ })

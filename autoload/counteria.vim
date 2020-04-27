@@ -1,14 +1,9 @@
 
-let s:executable = expand('<sfile>:h:h') . '/bin/counteriad'
-
 function! counteria#main(...) abort
     if !exists('s:job')
         let s:job = counteria#job#new()
     endif
-    " for debug
-    call s:job.stop()
-
-    call s:job.start(s:executable)
+    call s:job.start()
 
     let sync = v:false
     call s:job.call(sync, 'do', a:000)
@@ -20,7 +15,7 @@ function! counteria#request(method, sync, path, bufnr) abort
     if !exists('s:job')
         let s:job = counteria#job#new()
     endif
-    call s:job.start(s:executable)
+    call s:job.start()
 
     call s:job.call(a:sync, 'exec', a:method, a:path, str2nr(a:bufnr))
 
