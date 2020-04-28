@@ -12,7 +12,7 @@ type RemainingTime struct {
 }
 
 func (time RemainingTime) String() string {
-	if time.Done() {
+	if time.Done {
 		return "Done!"
 	}
 

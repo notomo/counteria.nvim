@@ -34,18 +34,7 @@ func (task *Task) DoneAt() *time.Time {
 	return &at
 }
 
-// Deadline :
-func (task *Task) Deadline() Deadline {
-	return Deadline{
-		Rule:     task.Rule(),
-		StartAt:  task.StartAt(),
-		LastDone: task.LastDone(),
-		Done:     task.Done(),
-	}
-}
-
 // Done :
-// TODO
 func (task *Task) Done() bool {
 	typ := task.Rule().Type()
 	switch typ {
@@ -66,7 +55,6 @@ func (task *Task) Done() bool {
 }
 
 // IsActive :
-// TODO
 func (task *Task) IsActive(now time.Time) bool {
 	rule := task.Rule()
 	typ := rule.Type()
@@ -85,6 +73,16 @@ func (task *Task) IsActive(now time.Time) bool {
 		return true
 	}
 	panic("unreachable: invalid rule type: " + typ)
+}
+
+// Deadline :
+func (task *Task) Deadline() Deadline {
+	return Deadline{
+		Rule:     task.Rule(),
+		StartAt:  task.StartAt(),
+		LastDone: task.LastDone(),
+		Done:     task.Done(),
+	}
 }
 
 // Deadline :
@@ -113,7 +111,7 @@ func (deadline Deadline) Latest() *time.Time {
 func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
 	latest := deadline.Latest()
 	if latest == nil {
-		return RemainingTime{done: deadline.Done}
+		return RemainingTime{Done: deadline.Done}
 	}
 	duration := latest.Sub(now)
 
@@ -126,7 +124,7 @@ func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
 		Days:     days,
 		Hours:    hours,
 		Minutes:  minutes,
-		done:     deadline.Done,
+		Done:     deadline.Done,
 		duration: duration,
 	}
 }
@@ -137,18 +135,13 @@ type RemainingTime struct {
 	Hours   int
 	Minutes int
 
-	done     bool
+	Done     bool
 	duration time.Duration
 }
 
 // Exists :
 func (t RemainingTime) Exists() bool {
 	return t.duration >= 0
-}
-
-// Done :
-func (t RemainingTime) Done() bool {
-	return t.done
 }
 
 // DoneTask :
