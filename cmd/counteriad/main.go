@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -28,7 +29,7 @@ func init() {
 func main() {
 	flag.Parse()
 	if err := run(); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 }
 
@@ -73,12 +74,25 @@ func run() error {
 		),
 	)
 
-	vim.RegisterHandler("do", handler.Do)
-	vim.RegisterHandler("exec", handler.Exec)
-
-	// for testing
-	vim.RegisterHandler("startWaiting", handler.StartWaiting)
-	vim.RegisterHandler("wait", handler.Wait)
+	handles := []struct {
+		method string
+		fn     interface{}
+	}{
+		{method: "do", fn: handler.Do},
+		{method: "exec", fn: handler.Exec},
+		// for buffer attach, detach
+		{method: "nvim_buf_lines_event", fn: handler.BufferLinesEvent},
+		{method: "nvim_buf_changedtick_event", fn: handler.BufferChangedtickEvent},
+		{method: "nvim_buf_detach_event", fn: handler.BufferDetachEvent},
+		// for testing
+		{method: "start_waiting", fn: handler.StartWaiting},
+		{method: "wait", fn: handler.Wait},
+	}
+	for _, h := range handles {
+		if err := vim.RegisterHandler(h.method, h.fn); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 
 	if err := vim.Serve(); err != nil {
 		return errors.WithStack(err)

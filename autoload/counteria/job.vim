@@ -40,7 +40,7 @@ function! counteria#job#new() abort
             return
         endif
         " HACk: for enqueue notification and wait it
-        call rpcnotify(self.id, 'startWaiting')
+        call rpcnotify(self.id, 'start_waiting')
         call rpcrequest(self.id, 'wait')
     endfunction
 

@@ -37,9 +37,24 @@ func (handler *Handler) Exec(method route.Method, path string, bufnr int) error 
 	return nil
 }
 
+// BufferLinesEvent : entry point for "nvim_buf_lines_event"
+func (handler *Handler) BufferLinesEvent(bufnr nvim.Buffer, changedtick, firstline, lastline int, linedata []string, more bool) error {
+	return nil
+}
+
+// BufferChangedtickEvent : entry point for "nvim_buf_changedtick_event"
+func (handler *Handler) BufferChangedtickEvent(bufnr nvim.Buffer, changedtick int) error {
+	return nil
+}
+
+// BufferDetachEvent : entry point for "nvim_buf_detach_event"
+func (handler *Handler) BufferDetachEvent(bufnr nvim.Buffer) error {
+	return nil
+}
+
 // NOTE: for testing
 
-// StartWaiting : entry point for "startWaiting"
+// StartWaiting : entry point for "start_waiting"
 func (handler *Handler) StartWaiting() error {
 	handler.waiting <- struct{}{}
 	return nil
