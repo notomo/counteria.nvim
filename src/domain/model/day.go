@@ -6,9 +6,9 @@ import "time"
 type Day int
 
 // Contains :
+// NOTE: if the day doesn't exist in the month, the last day is used.
 func (day Day) Contains(at time.Time) bool {
-	d := at.Day()
-	return int(day) == d
+	return day.NextTime(at).Day() == at.Day()
 }
 
 // NextTime :
