@@ -103,7 +103,10 @@ func (rule *TaskRule) NextTime(startAt time.Time, lastDone *DoneTask) *time.Time
 		if lastDone == nil {
 			return rule.Days().NextTime(startAt)
 		}
-		return rule.Days().NextTime(lastDone.At())
+		days := rule.Days()
+		y, m, _ := lastDone.At().Date()
+		at := time.Date(y, m, int(days[0]), 0, 0, 0, 0, time.Local).AddDate(0, 0, 1)
+		return days.NextTime(at)
 	case TaskRuleTypeInWeekdays:
 		if lastDone == nil {
 			return rule.Weekdays().NextTime(startAt)

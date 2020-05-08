@@ -31,12 +31,12 @@ func (cmd *Command) List() error {
 		Offset: 0,
 	}
 
-	tasks, err := cmd.TaskRepository.List(option)
+	now := cmd.Clock.Now()
+	tasks, err := cmd.TaskRepository.List(option, now)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	now := cmd.Clock.Now()
 	return cmd.Renderer.TaskList(tasks, now)
 }
 
@@ -121,7 +121,7 @@ func (cmd *Command) Done(taskID int) error {
 		return cmd.Renderer.Warn("not active")
 	}
 
-	if task.Done() {
+	if task.Done(now) {
 		return cmd.Renderer.Warn("already done")
 	}
 

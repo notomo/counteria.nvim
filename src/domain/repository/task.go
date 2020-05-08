@@ -8,7 +8,7 @@ import (
 
 // TaskRepository :
 type TaskRepository interface {
-	List(ListOption) ([]model.Task, error)
+	List(opt ListOption, now time.Time) ([]model.Task, error)
 	Create(Transaction, *model.Task) error
 	Update(Transaction, *model.Task) error
 	Delete(Transaction, *model.Task) error

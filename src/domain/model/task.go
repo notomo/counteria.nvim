@@ -35,7 +35,7 @@ func (task *Task) DoneAt() *time.Time {
 }
 
 // Done :
-func (task *Task) Done() bool {
+func (task *Task) Done(now time.Time) bool {
 	typ := task.Rule().Type()
 	switch typ {
 	case TaskRuleTypePeriodic:
@@ -43,7 +43,7 @@ func (task *Task) Done() bool {
 	case TaskRuleTypeByTimes:
 		return task.LastDone() != nil
 	case TaskRuleTypeInDaysEveryMonth:
-		return task.LastDone() != nil && task.Rule().Days().Contains(task.LastDone().At())
+		return task.LastDone() != nil && task.Rule().Days().Contains(task.LastDone().At(), now)
 	case TaskRuleTypeInDates:
 		return task.LastDone() != nil
 	case TaskRuleTypeInWeekdays:
@@ -64,7 +64,7 @@ func (task *Task) IsActive(now time.Time) bool {
 	case TaskRuleTypeByTimes:
 		return true
 	case TaskRuleTypeInDaysEveryMonth:
-		return rule.Days().Contains(now)
+		return rule.Days().Contains(now, now)
 	case TaskRuleTypeInDates:
 		return rule.Dates().Contains(now)
 	case TaskRuleTypeInWeekdays:
@@ -76,12 +76,13 @@ func (task *Task) IsActive(now time.Time) bool {
 }
 
 // Deadline :
-func (task *Task) Deadline() Deadline {
+func (task *Task) Deadline(now time.Time) Deadline {
 	return Deadline{
 		Rule:     task.Rule(),
 		StartAt:  task.StartAt(),
 		LastDone: task.LastDone(),
-		Done:     task.Done(),
+		Done:     task.Done(now),
+		Now:      now,
 	}
 }
 
@@ -91,6 +92,7 @@ type Deadline struct {
 	StartAt  time.Time
 	LastDone *DoneTask
 	Done     bool
+	Now      time.Time
 }
 
 // Next :
@@ -108,12 +110,12 @@ func (deadline Deadline) Latest() *time.Time {
 }
 
 // RemainingTime : how much time until task deadline
-func (deadline Deadline) RemainingTime(now time.Time) RemainingTime {
+func (deadline Deadline) RemainingTime() RemainingTime {
 	latest := deadline.Latest()
 	if latest == nil {
 		return RemainingTime{Done: deadline.Done}
 	}
-	duration := latest.Sub(now)
+	duration := latest.Sub(deadline.Now)
 
 	h := int(math.Abs(duration.Hours()))
 	days := h / 24

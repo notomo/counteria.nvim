@@ -34,7 +34,7 @@ type TaskSummary struct {
 }
 
 // List :
-func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, error) {
+func (repo *TaskRepository) List(option repository.ListOption, now time.Time) ([]model.Task, error) {
 	sql := `
 	SELECT
 		t.*
@@ -82,11 +82,11 @@ func (repo *TaskRepository) List(option repository.ListOption) ([]model.Task, er
 
 	if option.Sort.By == repository.SortByTaskRemains {
 		sort.Slice(tasks, func(i, j int) bool {
-			latestI := tasks[i].Deadline().Latest()
+			latestI := tasks[i].Deadline(now).Latest()
 			if latestI == nil {
 				return false
 			}
-			latestJ := tasks[j].Deadline().Latest()
+			latestJ := tasks[j].Deadline(now).Latest()
 			if latestJ == nil {
 				return false
 			}

@@ -29,7 +29,10 @@ func (day Day) NextTime(at time.Time) time.Time {
 type Days []Day
 
 // Contains :
-func (days Days) Contains(at time.Time) bool {
+func (days Days) Contains(at time.Time, now time.Time) bool {
+	if at.Month() != now.Month() {
+		return false
+	}
 	for _, d := range days {
 		if d.Contains(at) {
 			return true
