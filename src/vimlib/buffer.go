@@ -255,3 +255,22 @@ func (client *BufferClient) SyncRequest(method, path string) error {
 	}
 	return nil
 }
+
+// Path :
+func (client *BufferClient) Path() (string, error) {
+	path, err := client.Vim.BufferName(client.Bufnr)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return path, nil
+}
+
+// BufferLinesEvent : nvim_buf_lines_event
+type BufferLinesEvent struct {
+	Bufnr       nvim.Buffer
+	ChangedTick int
+	FirstLine   int
+	LastLine    int
+	Lines       []string
+	More        bool
+}

@@ -141,6 +141,9 @@ var All = Routes{
 	TasksList,
 }
 
+// Events : all events
+var Events = Routes{}
+
 // Match :
 func (routes Routes) Match(method Method, path string) (Request, error) {
 	for _, r := range routes {

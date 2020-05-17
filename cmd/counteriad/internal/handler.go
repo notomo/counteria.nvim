@@ -4,6 +4,7 @@ import (
 	"github.com/neovim/go-client/nvim"
 	"github.com/notomo/counteria.nvim/src/router"
 	"github.com/notomo/counteria.nvim/src/router/route"
+	"github.com/notomo/counteria.nvim/src/vimlib"
 )
 
 // Handler : rpc handler
@@ -39,6 +40,17 @@ func (handler *Handler) Exec(method route.Method, path string, bufnr int) error 
 
 // BufferLinesEvent : entry point for "nvim_buf_lines_event"
 func (handler *Handler) BufferLinesEvent(bufnr nvim.Buffer, changedtick, firstline, lastline int, linedata []string, more bool) error {
+	event := vimlib.BufferLinesEvent{
+		Bufnr:       bufnr,
+		ChangedTick: changedtick,
+		FirstLine:   firstline,
+		LastLine:    lastline,
+		Lines:       linedata,
+		More:        more,
+	}
+	if err := handler.Router.BufferLinesEvent(event); err != nil {
+		return handler.Router.Error(err)
+	}
 	return nil
 }
 

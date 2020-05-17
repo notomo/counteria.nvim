@@ -62,7 +62,7 @@ func (router *Router) Do(args []string) error {
 func (router *Router) Exec(method route.Method, path string, bufnr nvim.Buffer) error {
 	var bufferPath string
 	if path == "" {
-		p, err := router.Vim.BufferName(bufnr)
+		p, err := router.BufferClientFactory.Get(bufnr).Path()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -119,6 +119,39 @@ func (router *Router) exec(req route.Request, bufnr nvim.Buffer) error {
 		case route.TasksOne.Path:
 			return router.Root.TaskCmd(bufnr).Delete(params.TaskID())
 		}
+	}
+
+	return route.NewErrNotFound(path)
+}
+
+// BufferLinesEvent :
+func (router *Router) BufferLinesEvent(event vimlib.BufferLinesEvent) error {
+	path, err := router.BufferClientFactory.Get(event.Bufnr).Path()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	req, err := route.Events.Match(route.MethodRead, path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := router.event(req, event); err != nil {
+		raw := errors.Cause(err)
+		switch raw {
+		case domain.ErrNotFound:
+			return route.NewErrNotFound(path)
+		}
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (router *Router) event(req route.Request, event vimlib.BufferLinesEvent) error {
+	path := req.Route.Path
+	switch path {
+	// TODO
 	}
 
 	return route.NewErrNotFound(path)
